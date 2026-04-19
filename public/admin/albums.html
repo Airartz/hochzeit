@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alben verwalten – Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/admin/dashboard.html" class="navbar-brand"><span class="icon">⚙️</span> Admin Dashboard</a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/admin/dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="/admin/guests.html">👥 Gäste</a></li>
+                    <li><a href="/admin/albums.html" class="active">📁 Alben</a></li>
+                    <li><a href="/admin/challenges.html">🎯 Challenges</a></li>
+                    <li><a href="/admin/settings.html">⚙️ Einstellungen</a></li>
+                    <li><a href="/admin/qrcode.html">📱 QR-Code</a></li>
+                    <li><a href="/admin/countdown.html">⏳ Countdown</a></li>
+                    <li><a href="/" target="_blank">🌐 Zur Galerie</a></li>
+                    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container" style="max-width:800px">
+                <div class="flex-between mb-3 fade-in">
+                    <h1>📁 Alben</h1>
+                    <button class="btn btn-primary" onclick="showCreateModal()">+ Neues Album</button>
+                </div>
+
+                <div id="albumsList"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal-overlay" id="albumModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Neues Album</h2>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <form onsubmit="return saveAlbum(event)">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="albumName">Name</label>
+                    <input type="text" id="albumName" class="form-control" placeholder="z.B. Standesamt" required>
+                </div>
+                <div class="form-group">
+                    <label for="albumDesc">Beschreibung</label>
+                    <textarea id="albumDesc" class="form-control" rows="2" placeholder="Optional"></textarea>
+                </div>
+                <label class="flex gap-2 mb-3" style="align-items:center; cursor:pointer">
+                    <input type="checkbox" id="albumPrivate" style="width:18px;height:18px">
+                    <span>🔒 Privat (nur für Admin sichtbar)</span>
+                </label>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary">💾 Speichern</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login.html';
+
+        async function init() { await loadAlbums(); }
+
+        async function loadAlbums() {
+            try {
+                const res = await fetch(`${API}/api/albums`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const albums = await res.json();
+
+                document.getElementById('albumsList').innerHTML = albums.map(a => `
+                    <div class="card mb-2 fade-in">
+                        <div class="flex-between flex-wrap gap-2">
+                            <div>
+                                <h3>${a.name} ${a.is_private ? '<span class="badge badge-private">🔒 Privat</span>' : ''}</h3>
+                                <p class="text-muted" style="font-size:0.85rem">${a.description || 'Keine Beschreibung'}</p>
+                                <span class="badge badge-primary mt-1">${a.media_count || 0} Medien</span>
+                            </div>
+                            <div class="flex gap-1">
+                                <button class="btn btn-ghost btn-sm" onclick="editAlbum(${a.id}, '${a.name.replace(/'/g, "\\'")}', '${(a.description || '').replace(/'/g, "\\'")}', ${a.is_private})">✏️ Bearbeiten</button>
+                                ${a.id !== 1 ? `<button class="btn btn-ghost btn-sm" onclick="deleteAlbum(${a.id})" style="color:#e74c3c">🗑 Löschen</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { }
+        }
+
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Neues Album';
+            document.getElementById('editId').value = '';
+            document.getElementById('albumName').value = '';
+            document.getElementById('albumDesc').value = '';
+            document.getElementById('albumPrivate').checked = false;
+            document.getElementById('albumModal').classList.add('active');
+        }
+
+        function editAlbum(id, name, desc, isPrivate) {
+            document.getElementById('modalTitle').textContent = 'Album bearbeiten';
+            document.getElementById('editId').value = id;
+            document.getElementById('albumName').value = name;
+            document.getElementById('albumDesc').value = desc;
+            document.getElementById('albumPrivate').checked = isPrivate;
+            document.getElementById('albumModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('albumModal').classList.remove('active');
+        }
+
+        async function saveAlbum(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('albumName').value,
+                description: document.getElementById('albumDesc').value,
+                is_private: document.getElementById('albumPrivate').checked
+            };
+
+            try {
+                const res = await fetch(`${API}/api/albums${id ? '/' + id : ''}`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) throw new Error('Speichern fehlgeschlagen');
+
+                closeModal();
+                showToast(id ? 'Album aktualisiert ✅' : 'Album erstellt ✅', 'success');
+                await loadAlbums();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+            return false;
+        }
+
+        async function deleteAlbum(id) {
+            if (!confirm('Album wirklich löschen? Die Fotos werden ins Standard-Album verschoben.')) return;
+            try {
+                await fetch(`${API}/api/albums/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                showToast('Album gelöscht', 'success');
+                await loadAlbums();
+            } catch (e) {
+                showToast('Fehler beim Löschen', 'error');
+            }
+        }
+
+        function logout() { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+        function showToast(msg, type) {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div'); t.className = `toast toast-${type}`; t.textContent = msg;
+            c.appendChild(t); setTimeout(() => t.remove(), 4000);
+        }
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>

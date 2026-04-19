@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenges verwalten – Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/admin/dashboard.html" class="navbar-brand"><span class="icon">⚙️</span> Admin Dashboard</a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/admin/dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="/admin/guests.html">👥 Gäste</a></li>
+                    <li><a href="/admin/albums.html">📁 Alben</a></li>
+                    <li><a href="/admin/challenges.html" class="active">🎯 Challenges</a></li>
+                    <li><a href="/admin/settings.html">⚙️ Einstellungen</a></li>
+                    <li><a href="/admin/qrcode.html">📱 QR-Code</a></li>
+                    <li><a href="/admin/countdown.html">⏳ Countdown</a></li>
+                    <li><a href="/" target="_blank">🌐 Zur Galerie</a></li>
+                    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container" style="max-width:800px">
+                <div class="flex-between mb-3 fade-in">
+                    <h1>🎯 Foto-Challenges</h1>
+                    <button class="btn btn-primary" onclick="showCreateModal()">+ Neue Challenge</button>
+                </div>
+
+                <div class="card fade-in mb-3">
+                    <p class="text-muted">Erstelle lustige Foto-Aufgaben für eure Gäste! Die Challenges motivieren zu
+                        kreativen und einzigartigen Fotos.</p>
+                </div>
+
+                <div id="challengesList"></div>
+
+                <div class="empty-state" id="emptyState" style="display:none">
+                    <div class="empty-icon">🎯</div>
+                    <h3>Noch keine Challenges</h3>
+                    <p>Erstelle deine erste Foto-Challenge!</p>
+                </div>
+
+                <!-- Vorschläge -->
+                <div class="card fade-in mt-3">
+                    <h3 class="mb-2">💡 Ideen für Challenges</h3>
+                    <div class="challenges-grid" style="grid-template-columns:repeat(auto-fill, minmax(250px, 1fr))">
+                        <div class="challenge-card" style="cursor:pointer"
+                            onclick="quickCreate('📸', 'Selfie mit dem Brautpaar', 'Macht ein lustiges Selfie mit Braut und/oder Bräutigam!')">
+                            <div class="emoji">📸</div>
+                            <h3>Selfie mit Brautpaar</h3>
+                            <p>Klicken zum Hinzufügen</p>
+                        </div>
+                        <div class="challenge-card" style="cursor:pointer"
+                            onclick="quickCreate('💃', 'Tanzfoto', 'Zeigt eure besten Moves auf der Tanzfläche!')">
+                            <div class="emoji">💃</div>
+                            <h3>Tanzfoto</h3>
+                            <p>Klicken zum Hinzufügen</p>
+                        </div>
+                        <div class="challenge-card" style="cursor:pointer"
+                            onclick="quickCreate('🥂', 'Anstoßen', 'Fangt den perfekten Moment beim Anstoßen ein!')">
+                            <div class="emoji">🥂</div>
+                            <h3>Anstoßen</h3>
+                            <p>Klicken zum Hinzufügen</p>
+                        </div>
+                        <div class="challenge-card" style="cursor:pointer"
+                            onclick="quickCreate('😂', 'Lustigstes Gesicht', 'Wer kann das lustigste Gesicht machen?')">
+                            <div class="emoji">😂</div>
+                            <h3>Lustigstes Gesicht</h3>
+                            <p>Klicken zum Hinzufügen</p>
+                        </div>
+                        <div class="challenge-card" style="cursor:pointer"
+                            onclick="quickCreate('🍰', 'Das Essen', 'Fotografiert das leckerste Gericht!')">
+                            <div class="emoji">🍰</div>
+                            <h3>Das Essen</h3>
+                            <p>Klicken zum Hinzufügen</p>
+                        </div>
+                        <div class="challenge-card" style="cursor:pointer"
+                            onclick="quickCreate('🌅', 'Sonnenuntergang', 'Fangt den Sonnenuntergang ein!')">
+                            <div class="emoji">🌅</div>
+                            <h3>Sonnenuntergang</h3>
+                            <p>Klicken zum Hinzufügen</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="challengeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Neue Challenge</h2>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <form onsubmit="return saveChallenge(event)">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="challengeEmoji">Emoji</label>
+                    <input type="text" id="challengeEmoji" class="form-control" value="📸"
+                        style="font-size:2rem; text-align:center; max-width:80px">
+                </div>
+                <div class="form-group">
+                    <label for="challengeTitle">Titel</label>
+                    <input type="text" id="challengeTitle" class="form-control"
+                        placeholder="z.B. Selfie mit dem Brautpaar" required>
+                </div>
+                <div class="form-group">
+                    <label for="challengeDesc">Beschreibung</label>
+                    <textarea id="challengeDesc" class="form-control" rows="2"
+                        placeholder="Was sollen die Gäste fotografieren?"></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary">💾 Speichern</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login.html';
+
+        async function init() { await loadChallenges(); }
+
+        async function loadChallenges() {
+            try {
+                const res = await fetch(`${API}/api/challenges?all=true`);
+                const challenges = await res.json();
+
+                if (challenges.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('challengesList').innerHTML = '';
+                    return;
+                }
+
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('challengesList').innerHTML = challenges.map(c => `
+                    <div class="card mb-2 fade-in">
+                        <div class="flex-between flex-wrap gap-2">
+                            <div class="flex gap-2" style="align-items:center">
+                                <span style="font-size:2rem">${c.emoji}</span>
+                                <div>
+                                    <h3>${c.title} ${!c.is_active ? '<span class="badge badge-private">Inaktiv</span>' : ''}</h3>
+                                    <p class="text-muted" style="font-size:0.85rem">${c.description || ''}</p>
+                                    <span class="badge badge-primary mt-1">${c.submission_count || 0} Einreichungen</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-1">
+                                <button class="btn btn-ghost btn-sm" onclick="toggleActive(${c.id}, ${!c.is_active})">${c.is_active ? '⏸ Deaktivieren' : '▶ Aktivieren'}</button>
+                                <button class="btn btn-ghost btn-sm" onclick="editChallenge(${c.id}, '${c.emoji}', '${c.title.replace(/'/g, "\\'")}', '${(c.description || '').replace(/'/g, "\\'")}')">✏️</button>
+                                <button class="btn btn-ghost btn-sm" onclick="deleteChallenge(${c.id})" style="color:#e74c3c">🗑</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { }
+        }
+
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Neue Challenge';
+            document.getElementById('editId').value = '';
+            document.getElementById('challengeEmoji').value = '📸';
+            document.getElementById('challengeTitle').value = '';
+            document.getElementById('challengeDesc').value = '';
+            document.getElementById('challengeModal').classList.add('active');
+        }
+
+        function editChallenge(id, emoji, title, desc) {
+            document.getElementById('modalTitle').textContent = 'Challenge bearbeiten';
+            document.getElementById('editId').value = id;
+            document.getElementById('challengeEmoji').value = emoji;
+            document.getElementById('challengeTitle').value = title;
+            document.getElementById('challengeDesc').value = desc;
+            document.getElementById('challengeModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('challengeModal').classList.remove('active'); }
+
+        async function saveChallenge(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const data = {
+                emoji: document.getElementById('challengeEmoji').value,
+                title: document.getElementById('challengeTitle').value,
+                description: document.getElementById('challengeDesc').value
+            };
+
+            try {
+                await fetch(`${API}/api/challenges${id ? '/' + id : ''}`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(data)
+                });
+                closeModal();
+                showToast(id ? 'Challenge aktualisiert ✅' : 'Challenge erstellt ✅', 'success');
+                await loadChallenges();
+            } catch (err) { showToast('Fehler', 'error'); }
+            return false;
+        }
+
+        async function quickCreate(emoji, title, description) {
+            try {
+                await fetch(`${API}/api/challenges`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ emoji, title, description })
+                });
+                showToast(`"${title}" hinzugefügt ✅`, 'success');
+                await loadChallenges();
+            } catch (e) { showToast('Fehler', 'error'); }
+        }
+
+        async function toggleActive(id, active) {
+            await fetch(`${API}/api/challenges/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ is_active: active })
+            });
+            await loadChallenges();
+        }
+
+        async function deleteChallenge(id) {
+            if (!confirm('Challenge wirklich löschen?')) return;
+            await fetch(`${API}/api/challenges/${id}`, {
+                method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+            });
+            showToast('Challenge gelöscht', 'success');
+            await loadChallenges();
+        }
+
+        function logout() { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+        function showToast(msg, type) {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div'); t.className = `toast toast-${type}`; t.textContent = msg;
+            c.appendChild(t); setTimeout(() => t.remove(), 4000);
+        }
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>

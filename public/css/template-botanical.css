@@ -1,0 +1,153 @@
+/* ===== Botanical Wedding Template ===== */
+/* Überschreibt die Standard-Farben und fügt botanische Elemente hinzu */
+
+:root {
+    --primary: #7A9E77 !important;
+    --primary-light: #B8D4B5 !important;
+    --primary-dark: #5A7B57 !important;
+    --secondary: #3D5A3A !important;
+    --background: #EEF5EC !important;
+    --surface: rgba(255, 255, 255, 0.85) !important;
+    --surface-glass: rgba(238, 245, 236, 0.85) !important;
+    --text-primary: #2D3B2C !important;
+    --text-secondary: #5A6B58 !important;
+    --text-light: #7E8E7C !important;
+    --border: rgba(122, 158, 119, 0.2) !important;
+    --border-light: rgba(122, 158, 119, 0.1) !important;
+    --shadow-sm: 0 2px 8px rgba(90, 123, 87, 0.06) !important;
+    --shadow-md: 0 8px 32px rgba(90, 123, 87, 0.08) !important;
+    --shadow-lg: 0 16px 48px rgba(90, 123, 87, 0.12) !important;
+    --shadow-glow: 0 0 40px rgba(122, 158, 119, 0.15) !important;
+}
+
+/* Hintergrund mit Aquarell-Effekt */
+body {
+    background:
+        radial-gradient(ellipse at 10% 10%, rgba(122, 158, 119, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 20%, rgba(143, 176, 140, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(122, 158, 119, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 85%, rgba(143, 176, 140, 0.13) 0%, transparent 50%),
+        linear-gradient(135deg, #e8f0e6, #f0f7ee, #eef5ec) !important;
+    background-attachment: fixed !important;
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(238, 245, 236, 0.9) !important;
+    border-bottom: 1px solid rgba(122, 158, 119, 0.15) !important;
+}
+
+.navbar-brand {
+    color: #5A7B57 !important;
+}
+
+.navbar-links a:hover,
+.navbar-links a.active {
+    color: #5A7B57 !important;
+    background: rgba(122, 158, 119, 0.12) !important;
+}
+
+/* Karten */
+.card,
+.stat-card {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(122, 158, 119, 0.15) !important;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #7A9E77, #5A7B57) !important;
+    box-shadow: 0 4px 16px rgba(90, 123, 87, 0.3) !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #8FB08C, #6B8F68) !important;
+    box-shadow: 0 6px 24px rgba(90, 123, 87, 0.4) !important;
+}
+
+.btn-secondary {
+    background: rgba(122, 158, 119, 0.1) !important;
+    color: #5A7B57 !important;
+    border: 1px solid rgba(122, 158, 119, 0.25) !important;
+}
+
+.btn-secondary:hover {
+    background: rgba(122, 158, 119, 0.2) !important;
+}
+
+/* Hero */
+.hero {
+    background:
+        radial-gradient(ellipse at center, rgba(122, 158, 119, 0.1) 0%, transparent 70%),
+        transparent !important;
+}
+
+.highlight {
+    color: #5A7B57 !important;
+    background: none !important;
+}
+
+/* Form Controls */
+.form-control:focus {
+    border-color: #7A9E77 !important;
+    box-shadow: 0 0 0 3px rgba(122, 158, 119, 0.15) !important;
+}
+
+/* Footer */
+.footer {
+    background: rgba(61, 90, 58, 0.05) !important;
+    border-top: 1px solid rgba(122, 158, 119, 0.15) !important;
+}
+
+.footer .heart {
+    color: #7A9E77 !important;
+}
+
+/* Galerie – Lightbox */
+.lightbox-overlay {
+    background: rgba(45, 59, 44, 0.95) !important;
+}
+
+/* Toast */
+.toast-success {
+    background: #5A7B57 !important;
+}
+
+/* Upload Dropzone */
+.dropzone {
+    border-color: rgba(122, 158, 119, 0.3) !important;
+    background: rgba(238, 245, 236, 0.5) !important;
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+    border-color: #7A9E77 !important;
+    background: rgba(122, 158, 119, 0.08) !important;
+}
+
+/* Progress Bar */
+.progress-fill {
+    background: linear-gradient(90deg, #7A9E77, #5A7B57) !important;
+}
+
+/* Stat Karten Icons */
+.stat-icon {
+    background: rgba(122, 158, 119, 0.1) !important;
+    color: #5A7B57 !important;
+}
+
+/* Challenge Karten */
+.challenge-card {
+    border-left: 4px solid #7A9E77 !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar-thumb {
+    background: rgba(122, 158, 119, 0.3) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(122, 158, 119, 0.5) !important;
+}

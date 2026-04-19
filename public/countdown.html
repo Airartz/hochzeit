@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown – Bald geht es los!</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💒</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
+
+        :root {
+            --gold: #C9A84C;
+            --gold-light: #e2d5a8;
+            --sage: #7A9E77;
+            --sage-dark: #5A7B57;
+            --sage-light: #B8D4B5;
+            --eucalyptus: #8FB08C;
+            --mint: #E8F0E6;
+            --cream: #FAFDF9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8f0e6 0%, #f0f7ee 25%, #eef5ec 50%, #e5ede3 75%, #ecf3ea 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ===== Aquarell-Hintergrund ===== */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wc {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+        }
+
+        .wc-1 {
+            width: 600px;
+            height: 500px;
+            top: -15%;
+            left: -10%;
+            background: radial-gradient(ellipse, rgba(122, 158, 119, 0.35) 0%, transparent 70%);
+        }
+
+        .wc-2 {
+            width: 500px;
+            height: 450px;
+            top: -10%;
+            right: -8%;
+            background: radial-gradient(ellipse, rgba(143, 176, 140, 0.3) 0%, transparent 70%);
+        }
+
+        .wc-3 {
+            width: 550px;
+            height: 500px;
+            bottom: -12%;
+            left: -5%;
+            background: radial-gradient(ellipse, rgba(122, 158, 119, 0.3) 0%, transparent 70%);
+        }
+
+        .wc-4 {
+            width: 500px;
+            height: 400px;
+            bottom: -8%;
+            right: -10%;
+            background: radial-gradient(ellipse, rgba(143, 176, 140, 0.35) 0%, transparent 70%);
+        }
+
+        .wc-5 {
+            width: 300px;
+            height: 300px;
+            top: 35%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse, rgba(201, 168, 76, 0.08) 0%, transparent 70%);
+        }
+
+        /* Aquarell-Spritzer */
+        .splash {
+            position: absolute;
+            opacity: 0.12;
+            filter: blur(2px);
+        }
+
+        .splash-1 {
+            width: 180px;
+            height: 120px;
+            top: 8%;
+            right: 12%;
+            background: var(--sage);
+            border-radius: 60% 40% 55% 45%;
+            transform: rotate(15deg);
+        }
+
+        .splash-2 {
+            width: 140px;
+            height: 100px;
+            bottom: 12%;
+            left: 8%;
+            background: var(--sage);
+            border-radius: 45% 55% 40% 60%;
+            transform: rotate(-20deg);
+        }
+
+        .splash-3 {
+            width: 90px;
+            height: 70px;
+            top: 45%;
+            right: 6%;
+            background: var(--gold);
+            border-radius: 50% 50% 40% 60%;
+            transform: rotate(30deg);
+            opacity: 0.06;
+        }
+
+        /* ===== Blätter-Dekoration ===== */
+        .leaves {
+            position: fixed;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .leaves-tr {
+            top: 0;
+            right: 0;
+            width: clamp(140px, 22vw, 300px);
+            height: auto;
+        }
+
+        .leaves-bl {
+            bottom: 0;
+            left: 0;
+            width: clamp(140px, 22vw, 300px);
+            height: auto;
+            transform: rotate(180deg);
+        }
+
+        .leaves-tl {
+            top: 0;
+            left: 0;
+            width: clamp(80px, 12vw, 160px);
+            height: auto;
+        }
+
+        .leaves-br {
+            bottom: 0;
+            right: 0;
+            width: clamp(80px, 12vw, 160px);
+            height: auto;
+            transform: scaleX(-1);
+        }
+
+        /* ===== Goldrahmen ===== */
+        .frame {
+            position: fixed;
+            top: clamp(20px, 4vh, 50px);
+            left: clamp(20px, 4vw, 60px);
+            right: clamp(20px, 4vw, 60px);
+            bottom: clamp(20px, 4vh, 50px);
+            border: 1.5px solid rgba(201, 168, 76, 0.45);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ===== Hauptinhalt ===== */
+        .main {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 32px 24px;
+            max-width: 720px;
+            width: 100%;
+        }
+
+        /* Hochzeitsringe-Icon */
+        .rings {
+            font-size: 2.8rem;
+            margin-bottom: 16px;
+            display: inline-block;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        /* Überschrift */
+        .title {
+            font-family: 'Cormorant Garamond', 'Playfair Display', serif;
+            font-size: clamp(2.4rem, 7vw, 4.5rem);
+            font-weight: 500;
+            color: var(--sage-dark);
+            line-height: 1.15;
+            margin-bottom: 6px;
+            animation: fadeUp 1s ease-out 0.15s both;
+        }
+
+        /* Dekorativer Teiler */
+        .ornament {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin: 14px 0 18px;
+            animation: fadeUp 1s ease-out 0.3s both;
+        }
+
+        .orn-line {
+            width: 50px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .orn-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+
+        /* Beschreibung */
+        .subtitle {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1rem, 2.8vw, 1.25rem);
+            font-style: italic;
+            color: var(--eucalyptus);
+            line-height: 1.7;
+            max-width: 440px;
+            margin: 0 auto 36px;
+            animation: fadeUp 1s ease-out 0.45s both;
+        }
+
+        /* ===== Countdown-Timer ===== */
+        .timer {
+            display: flex;
+            justify-content: center;
+            gap: clamp(10px, 3.5vw, 28px);
+            margin-bottom: 36px;
+            animation: fadeUp 1s ease-out 0.6s both;
+        }
+
+        .unit {
+            text-align: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 18px;
+            padding: clamp(14px, 3vw, 22px) clamp(14px, 3.5vw, 28px);
+            min-width: clamp(64px, 16vw, 110px);
+            box-shadow:
+                0 8px 32px rgba(122, 158, 119, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .num {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 7vw, 4rem);
+            font-weight: 700;
+            color: var(--sage-dark);
+            line-height: 1;
+            display: block;
+        }
+
+        .lbl {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.55rem, 1.6vw, 0.7rem);
+            font-weight: 500;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            margin-top: 10px;
+            display: block;
+        }
+
+        /* ===== Paar & Datum ===== */
+        .couple {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            font-weight: 500;
+            color: var(--sage-dark);
+            animation: fadeUp 1s ease-out 0.8s both;
+        }
+
+        .couple-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .couple-leaf {
+            font-size: 1.1rem;
+            opacity: 0.6;
+        }
+
+        .date {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: var(--eucalyptus);
+            margin-top: 8px;
+            letter-spacing: 1px;
+            animation: fadeUp 1s ease-out 1s both;
+        }
+
+        /* Abgelaufen */
+        .done-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
+            color: var(--sage-dark);
+        }
+
+        .done-sub {
+            font-size: 1rem;
+            color: var(--eucalyptus);
+            margin-top: 8px;
+        }
+
+        /* ===== Animationen ===== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== Mobile ===== */
+        @media (max-width: 480px) {
+            .card {
+                border-radius: 14px;
+            }
+
+            .frame {
+                opacity: 0.3;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Aquarell-Hintergrund -->
+    <div class="bg-layer">
+        <div class="wc wc-1"></div>
+        <div class="wc wc-2"></div>
+        <div class="wc wc-3"></div>
+        <div class="wc wc-4"></div>
+        <div class="wc wc-5"></div>
+        <div class="splash splash-1"></div>
+        <div class="splash splash-2"></div>
+        <div class="splash splash-3"></div>
+    </div>
+
+    <!-- Blätter in den Ecken -->
+    <svg class="leaves leaves-tr" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg">
+        <g>
+            <!-- Eukalyptus-Zweig -->
+            <path d="M260 0 C230 30, 200 70, 210 120" stroke="#7A9E77" stroke-width="2" fill="none" opacity="0.5" />
+            <path d="M240 0 C215 25, 185 65, 195 110" stroke="#5A7B57" stroke-width="1.5" fill="none" opacity="0.3" />
+            <!-- Blätter -->
+            <ellipse cx="245" cy="20" rx="22" ry="10" fill="#7A9E77" opacity="0.55" transform="rotate(-50 245 20)" />
+            <ellipse cx="230" cy="45" rx="20" ry="9" fill="#8FB08C" opacity="0.5" transform="rotate(-40 230 45)" />
+            <ellipse cx="220" cy="70" rx="18" ry="8" fill="#7A9E77" opacity="0.45" transform="rotate(-30 220 70)" />
+            <ellipse cx="215" cy="95" rx="16" ry="7" fill="#8FB08C" opacity="0.4" transform="rotate(-20 215 95)" />
+            <ellipse cx="212" cy="115" rx="14" ry="6" fill="#7A9E77" opacity="0.35" transform="rotate(-15 212 115)" />
+            <!-- Goldene Akzente -->
+            <path d="M250 5 C225 40, 195 80, 205 130" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.35" />
+            <ellipse cx="238" cy="30" rx="10" ry="4" fill="#C9A84C" opacity="0.2" transform="rotate(-45 238 30)" />
+            <ellipse cx="225" cy="58" rx="8" ry="3.5" fill="#C9A84C" opacity="0.18" transform="rotate(-35 225 58)" />
+            <!-- Zweiter Zweig -->
+            <path d="M200 0 C185 20, 170 55, 180 90" stroke="#5A7B57" stroke-width="1.5" fill="none" opacity="0.35" />
+            <ellipse cx="195" cy="15" rx="16" ry="7" fill="#8FB08C" opacity="0.4" transform="rotate(-55 195 15)" />
+            <ellipse cx="182" cy="38" rx="15" ry="6.5" fill="#7A9E77" opacity="0.35" transform="rotate(-45 182 38)" />
+            <ellipse cx="175" cy="58" rx="13" ry="5.5" fill="#8FB08C" opacity="0.3" transform="rotate(-35 175 58)" />
+            <ellipse cx="178" cy="78" rx="11" ry="5" fill="#7A9E77" opacity="0.25" transform="rotate(-25 178 78)" />
+        </g>
+    </svg>
+
+    <svg class="leaves leaves-bl" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg">
+        <g>
+            <path d="M260 0 C230 30, 200 70, 210 120" stroke="#7A9E77" stroke-width="2" fill="none" opacity="0.5" />
+            <ellipse cx="245" cy="20" rx="22" ry="10" fill="#7A9E77" opacity="0.55" transform="rotate(-50 245 20)" />
+            <ellipse cx="230" cy="45" rx="20" ry="9" fill="#8FB08C" opacity="0.5" transform="rotate(-40 230 45)" />
+            <ellipse cx="220" cy="70" rx="18" ry="8" fill="#7A9E77" opacity="0.45" transform="rotate(-30 220 70)" />
+            <ellipse cx="215" cy="95" rx="16" ry="7" fill="#8FB08C" opacity="0.4" transform="rotate(-20 215 95)" />
+            <path d="M250 5 C225 40, 195 80, 205 130" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.35" />
+            <ellipse cx="238" cy="30" rx="10" ry="4" fill="#C9A84C" opacity="0.2" transform="rotate(-45 238 30)" />
+            <path d="M200 0 C185 20, 170 55, 180 90" stroke="#5A7B57" stroke-width="1.5" fill="none" opacity="0.35" />
+            <ellipse cx="195" cy="15" rx="16" ry="7" fill="#8FB08C" opacity="0.4" transform="rotate(-55 195 15)" />
+            <ellipse cx="182" cy="38" rx="15" ry="6.5" fill="#7A9E77" opacity="0.35" transform="rotate(-45 182 38)" />
+            <ellipse cx="175" cy="58" rx="13" ry="5.5" fill="#8FB08C" opacity="0.3" transform="rotate(-35 175 58)" />
+        </g>
+    </svg>
+
+    <svg class="leaves leaves-tl" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+        <g>
+            <path d="M0 0 C20 25, 40 60, 30 100" stroke="#7A9E77" stroke-width="1.5" fill="none" opacity="0.4" />
+            <ellipse cx="12" cy="18" rx="16" ry="7" fill="#8FB08C" opacity="0.4" transform="rotate(50 12 18)" />
+            <ellipse cx="25" cy="40" rx="14" ry="6" fill="#7A9E77" opacity="0.35" transform="rotate(40 25 40)" />
+            <ellipse cx="32" cy="62" rx="12" ry="5.5" fill="#8FB08C" opacity="0.3" transform="rotate(30 32 62)" />
+            <ellipse cx="30" cy="82" rx="10" ry="4.5" fill="#7A9E77" opacity="0.25" transform="rotate(20 30 82)" />
+            <path d="M5 5 C22 35, 35 65, 28 95" stroke="#C9A84C" stroke-width="0.8" fill="none" opacity="0.3" />
+        </g>
+    </svg>
+
+    <svg class="leaves leaves-br" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+        <g>
+            <path d="M0 180 C20 155, 40 120, 30 80" stroke="#7A9E77" stroke-width="1.5" fill="none" opacity="0.4" />
+            <ellipse cx="12" cy="162" rx="16" ry="7" fill="#8FB08C" opacity="0.4" transform="rotate(-50 12 162)" />
+            <ellipse cx="25" cy="140" rx="14" ry="6" fill="#7A9E77" opacity="0.35" transform="rotate(-40 25 140)" />
+            <ellipse cx="32" cy="118" rx="12" ry="5.5" fill="#8FB08C" opacity="0.3" transform="rotate(-30 32 118)" />
+            <ellipse cx="30" cy="98" rx="10" ry="4.5" fill="#7A9E77" opacity="0.25" transform="rotate(-20 30 98)" />
+            <path d="M5 175 C22 145, 35 115, 28 85" stroke="#C9A84C" stroke-width="0.8" fill="none" opacity="0.3" />
+        </g>
+    </svg>
+
+    <!-- Goldrahmen -->
+    <div class="frame"></div>
+
+    <!-- ===== Inhalt ===== -->
+    <div class="main">
+        <span class="rings">💍</span>
+
+        <h1 class="title" id="heading">Wir heiraten!</h1>
+
+        <div class="ornament">
+            <span class="orn-line"></span>
+            <span class="orn-dot"></span>
+            <span class="orn-line"></span>
+        </div>
+
+        <p class="subtitle" id="subtext">Bald geht es los! Wir freuen uns darauf, diesen besonderen Tag mit euch zu
+            teilen.</p>
+
+        <div class="timer" id="timer">
+            <div class="unit">
+                <div class="card"><span class="num" id="days">00</span></div>
+                <span class="lbl">Tage</span>
+            </div>
+            <div class="unit">
+                <div class="card"><span class="num" id="hours">00</span></div>
+                <span class="lbl">Stunden</span>
+            </div>
+            <div class="unit">
+                <div class="card"><span class="num" id="minutes">00</span></div>
+                <span class="lbl">Minuten</span>
+            </div>
+            <div class="unit">
+                <div class="card"><span class="num" id="seconds">00</span></div>
+                <span class="lbl">Sekunden</span>
+            </div>
+        </div>
+
+        <div class="couple-wrap" id="coupleBlock" style="display:none">
+            <span class="couple-leaf">🌿</span>
+            <span class="couple" id="coupleNames"></span>
+            <span class="couple-leaf">🌿</span>
+        </div>
+        <div class="date" id="weddingDate" style="display:none"></div>
+    </div>
+
+    <script>
+        let countdownDate = null;
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/gallery');
+                const s = await res.json();
+
+                if (s.primary_color) {
+                    document.documentElement.style.setProperty('--gold', s.primary_color);
+                }
+
+                if (s.countdown_heading) document.getElementById('heading').textContent = s.countdown_heading;
+                if (s.countdown_text) document.getElementById('subtext').textContent = s.countdown_text;
+                if (s.title) document.title = s.title + ' – Countdown';
+
+                if (s.couple_names) {
+                    document.getElementById('coupleNames').textContent = s.couple_names;
+                    document.getElementById('coupleBlock').style.display = 'flex';
+                }
+
+                if (s.countdown_date) {
+                    countdownDate = new Date(s.countdown_date);
+                    const el = document.getElementById('weddingDate');
+                    el.textContent = countdownDate.toLocaleDateString('de-DE', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    });
+                    el.style.display = 'block';
+                    startCountdown();
+                }
+            } catch (e) {
+                console.error('Settings laden fehlgeschlagen:', e);
+            }
+        }
+
+        function startCountdown() {
+            function tick() {
+                const diff = countdownDate - new Date();
+                if (diff <= 0) {
+                    document.getElementById('timer').innerHTML =
+                        '<div><div class="done-title">🎉 Es ist soweit!</div><p class="done-sub">Die Galerie wird freigeschaltet…</p></div>';
+                    return;
+                }
+                const d = Math.floor(diff / 864e5);
+                const h = Math.floor((diff % 864e5) / 36e5);
+                const m = Math.floor((diff % 36e5) / 6e4);
+                const s = Math.floor((diff % 6e4) / 1e3);
+
+                document.getElementById('days').textContent = String(d).padStart(2, '0');
+                document.getElementById('hours').textContent = String(h).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(m).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(s).padStart(2, '0');
+            }
+            tick();
+            setInterval(tick, 1000);
+        }
+
+        loadSettings();
+    </script>
+</body>
+
+</html>

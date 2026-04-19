@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unsere Hochzeit – Fotogalerie</title>
+    <meta name="description"
+        content="Teilt eure schönsten Momente mit uns! Ladet Fotos und Videos von unserer Hochzeit hoch.">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/template-loader.js"></script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💒</text></svg>">
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/" class="navbar-brand">
+                    <span class="icon">💒</span>
+                    <span id="navTitle">Unsere Hochzeit</span>
+                </a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/" class="active">Start</a></li>
+                    <li><a href="/hochladen">📸 Hochladen</a></li>
+                    <li><a href="/galerie">🖼️ Galerie</a></li>
+                    <li><a href="/spiel">🎯 Challenges</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <section class="hero">
+                <div class="hero-content">
+                    <h1 id="heroTitle">Willkommen zu <span class="highlight">unserer Hochzeit</span></h1>
+                    <p id="heroText">Teilt eure schönsten Momente mit uns! Ladet eure Fotos und Videos hoch und lasst
+                        uns gemeinsam Erinnerungen schaffen.</p>
+                    <div class="hero-actions">
+                        <a href="/hochladen" class="btn btn-primary btn-lg">📸 Fotos hochladen</a>
+                        <a href="/galerie" class="btn btn-secondary btn-lg">🖼️ Galerie ansehen</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="container mt-4">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">📷</div>
+                        <div class="stat-value" id="statPhotos">0</div>
+                        <div class="stat-label">Fotos</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">🎬</div>
+                        <div class="stat-value" id="statVideos">0</div>
+                        <div class="stat-label">Videos</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="statGuests">0</div>
+                        <div class="stat-label">Gäste</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">📁</div>
+                        <div class="stat-value" id="statAlbums">0</div>
+                        <div class="stat-label">Alben</div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <h2>📷 So funktioniert's</h2>
+                    <div class="stats-grid mt-3">
+                        <div class="card fade-in text-center">
+                            <div style="font-size:3rem; margin-bottom:12px">1️⃣</div>
+                            <h3>QR-Code scannen</h3>
+                            <p class="text-muted mt-1">Scanne den QR-Code auf dem Tisch oder öffne den Link.</p>
+                        </div>
+                        <div class="card fade-in text-center">
+                            <div style="font-size:3rem; margin-bottom:12px">2️⃣</div>
+                            <h3>Name eingeben</h3>
+                            <p class="text-muted mt-1">Gib einfach deinen Vornamen ein – kein Login nötig!</p>
+                        </div>
+                        <div class="card fade-in text-center">
+                            <div style="font-size:3rem; margin-bottom:12px">3️⃣</div>
+                            <h3>Fotos hochladen</h3>
+                            <p class="text-muted mt-1">Wähle deine besten Fotos & Videos aus und lade sie hoch.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="/spiel" class="btn btn-primary">🎯 Foto-Challenges entdecken</a>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> für unsere Hochzeit</p>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API}/api/gallery`);
+                const settings = await res.json();
+                if (settings.title) {
+                    document.getElementById('navTitle').textContent = settings.title;
+                    document.getElementById('heroTitle').innerHTML = `Willkommen zu <span class="highlight">${settings.couple_names || settings.title}</span>`;
+                    document.title = settings.title + ' – Fotogalerie';
+                }
+                if (settings.welcome_text) {
+                    document.getElementById('heroText').textContent = settings.welcome_text;
+                }
+                if (settings.primary_color) {
+                    document.documentElement.style.setProperty('--primary', settings.primary_color);
+                }
+                if (settings.secondary_color) {
+                    document.documentElement.style.setProperty('--secondary', settings.secondary_color);
+                }
+                if (settings.background_color) {
+                    document.documentElement.style.setProperty('--background', settings.background_color);
+                }
+            } catch (e) { console.error('Settings laden fehlgeschlagen:', e); }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API}/api/media/stats`);
+                const stats = await res.json();
+                document.getElementById('statPhotos').textContent = stats.photos || 0;
+                document.getElementById('statVideos').textContent = stats.videos || 0;
+                document.getElementById('statGuests').textContent = stats.guests || 0;
+                document.getElementById('statAlbums').textContent = stats.albums || 0;
+            } catch (e) { console.error('Stats laden fehlgeschlagen:', e); }
+        }
+
+        function toggleNav() {
+            document.getElementById('navLinks').classList.toggle('open');
+        }
+
+        loadSettings();
+        loadStats();
+    </script>
+</body>
+
+</html>

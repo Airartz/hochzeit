@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Datenbank – NICHT überschreiben!
+data/
+
+# Hochgeladene Dateien – NICHT überschreiben!
+uploads/
+
+# Backup – NICHT überschreiben!
+backup/
+
+# Logs
+logs/
+
+# Environment
+.env

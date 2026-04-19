@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Code & Tischkarten – Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .qr-display {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .qr-display img {
+            max-width: 300px;
+            width: 100%;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-card-preview {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 32px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--border);
+        }
+
+        .table-card-preview h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .table-card-preview .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .table-card-preview .qr-img {
+            max-width: 200px;
+            margin: 0 auto 16px;
+        }
+
+        .table-card-preview .instruction {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 16px;
+        }
+
+        .table-card-preview .steps {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Print Mode Toggle */
+        .print-mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .print-mode-toggle .btn {
+            flex: 1;
+            text-align: center;
+        }
+
+        .print-mode-toggle .btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* QR Grid (screen) */
+        .qr-grid-preview {
+            display: none;
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .qr-grid-preview.visible {
+            display: block;
+        }
+
+        .qr-grid-inner {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .qr-grid-item {
+            text-align: center;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+        }
+
+        .qr-grid-item img {
+            width: 100%;
+            max-width: 120px;
+        }
+
+        .qr-grid-item .qr-grid-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            /* Alles außer #printArea verstecken */
+            .page-wrapper,
+            .toast-container {
+                display: none !important;
+            }
+
+            /* Print-Container */
+            #printArea {
+                display: block !important;
+            }
+
+            /* Tischkarte im Print */
+            #printArea .table-card-preview {
+                width: 90mm;
+                margin: 80mm auto 0;
+                padding: 15mm;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+                text-align: center;
+                background: #fff;
+                box-shadow: none;
+            }
+
+            #printArea .table-card-preview .qr-img {
+                max-width: 55mm;
+            }
+
+            #printArea .table-card-preview h2 {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.4rem;
+                margin-bottom: 4px;
+            }
+
+            #printArea .table-card-preview .subtitle {
+                font-size: 0.85rem;
+                color: #666;
+                margin-bottom: 12px;
+            }
+
+            #printArea .table-card-preview .instruction {
+                font-size: 0.8rem;
+                color: #666;
+                margin-top: 8px;
+            }
+
+            #printArea .table-card-preview .steps {
+                display: flex;
+                gap: 16px;
+                justify-content: center;
+                margin-top: 8px;
+                font-size: 0.75rem;
+                color: #999;
+            }
+
+            /* QR Grid im Print */
+            #printArea .qr-grid-print {
+                width: 190mm;
+                height: 277mm;
+                margin: 10mm auto;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                gap: 3mm;
+            }
+
+            #printArea .qr-grid-print .qr-grid-item {
+                border: 1px dashed #bbb;
+                border-radius: 3px;
+                padding: 2mm;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #printArea .qr-grid-print .qr-grid-item img {
+                width: 42mm;
+                height: 42mm;
+                object-fit: contain;
+            }
+
+            #printArea .qr-grid-print .qr-grid-label {
+                font-size: 6pt;
+                margin-top: 1mm;
+                line-height: 1.1;
+                color: #666;
+                text-align: center;
+            }
+        }
+
+        /* Print-Bereich im Screen verstecken */
+        #printArea {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar no-print">
+            <div class="navbar-inner">
+                <a href="/admin/dashboard.html" class="navbar-brand"><span class="icon">⚙️</span> Admin Dashboard</a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/admin/dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="/admin/guests.html">👥 Gäste</a></li>
+                    <li><a href="/admin/albums.html">📁 Alben</a></li>
+                    <li><a href="/admin/challenges.html">🎯 Challenges</a></li>
+                    <li><a href="/admin/settings.html">⚙️ Einstellungen</a></li>
+                    <li><a href="/admin/qrcode.html" class="active">📱 QR-Code</a></li>
+                    <li><a href="/admin/countdown.html">⏳ Countdown</a></li>
+                    <li><a href="/" target="_blank">🌐 Zur Galerie</a></li>
+                    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container" style="max-width:800px">
+                <h1 class="mb-3 fade-in no-print">📱 QR-Code & Tischkarten</h1>
+
+                <!-- URL Eingabe -->
+                <div class="card fade-in mb-3 no-print">
+                    <h3 class="mb-2">🔗 Galerie-URL</h3>
+                    <p class="text-muted mb-2" style="font-size:0.9rem">Gib die öffentliche URL eurer Galerie ein (z.B.
+                        eure Domain oder die lokale IP):</p>
+                    <div class="flex gap-1">
+                        <input type="url" id="galleryUrl" class="form-control" placeholder="https://eure-hochzeit.de"
+                            style="flex:1">
+                        <button class="btn btn-primary" onclick="generateQR()">QR generieren</button>
+                    </div>
+                </div>
+
+                <!-- QR Code Display -->
+                <div class="card fade-in mb-3">
+                    <div class="qr-display">
+                        <h3 class="mb-2 no-print">📱 QR-Code</h3>
+                        <img id="qrImage" src="" alt="QR Code" style="display:none">
+                        <p class="text-muted mt-2 no-print" id="qrUrl"></p>
+                    </div>
+                </div>
+
+                <!-- Table Card Preview -->
+                <div class="card fade-in mb-3">
+                    <h3 class="mb-2 no-print">🃏 Tischkarten-Vorschau</h3>
+                    <div class="table-card-preview" id="tableCard">
+                        <h2 id="cardTitle">💒 Unsere Hochzeit</h2>
+                        <p class="subtitle" id="cardSubtitle">Teilt eure schönsten Momente mit uns!</p>
+                        <img id="cardQR" class="qr-img" src="" alt="QR">
+                        <p class="instruction">Scanne den QR-Code mit deinem Handy</p>
+                        <div class="steps">
+                            <span>1. Scannen</span>
+                            <span>2. Name eingeben</span>
+                            <span>3. Fotos hochladen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Grid (für Massenausdruck) -->
+                <div class="card fade-in mb-3" id="qrGridCard" style="display:none">
+                    <h3 class="mb-2 no-print">📋 QR-Code Raster (12 Stück pro A4)</h3>
+                    <div class="qr-grid-preview visible" id="qrGridPreview">
+                        <div class="qr-grid-inner" id="qrGridInner"></div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card fade-in mb-3 no-print">
+                    <h3 class="mb-2">🖨️ Drucken</h3>
+                    <div class="print-mode-toggle mb-2">
+                        <button class="btn active" id="btnModeCard" onclick="setPrintMode('card')">🃏
+                            Tischkarte</button>
+                        <button class="btn btn-ghost" id="btnModeGrid" onclick="setPrintMode('grid')">📋 Nur QR-Codes
+                            (12x)</button>
+                    </div>
+                    <p class="text-muted" style="font-size:0.85rem;margin-bottom:12px" id="printModeDesc">
+                        Druckt eine einzelne Tischkarte mit QR-Code, Titel und Anleitung – ideal zum Aufstellen auf dem
+                        Tisch.
+                    </p>
+                    <div class="flex gap-2 flex-wrap">
+                        <button class="btn btn-primary" onclick="printSelected()">🖨️ Drucken</button>
+                        <button class="btn btn-secondary" onclick="downloadQR()">📥 QR-Code herunterladen</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Print-Bereich (außerhalb page-wrapper!) -->
+    <div id="printArea"></div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login.html';
+
+        async function init() {
+            // Lade Galerie-Einstellungen für Tischkarte
+            try {
+                const res = await fetch(`${API}/api/gallery`);
+                const s = await res.json();
+                if (s.title) document.getElementById('cardTitle').textContent = `💒 ${s.title}`;
+                if (s.welcome_text) document.getElementById('cardSubtitle').textContent = s.welcome_text;
+                if (s.primary_color) {
+                    document.documentElement.style.setProperty('--primary', s.primary_color);
+                    document.documentElement.style.setProperty('--primary-dark', s.primary_color);
+                }
+
+                // Gespeicherte URL laden oder Standard verwenden
+                const defaultUrl = `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`;
+                document.getElementById('galleryUrl').value = s.gallery_url || defaultUrl;
+            } catch (e) {
+                const defaultUrl = `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`;
+                document.getElementById('galleryUrl').value = defaultUrl;
+            }
+
+            generateQR();
+        }
+
+        async function generateQR() {
+            const url = document.getElementById('galleryUrl').value || window.location.origin;
+            try {
+                // URL in Einstellungen speichern
+                const formData = new FormData();
+                formData.append('gallery_url', url);
+                await fetch(`${API}/api/gallery`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                // QR-Code generieren
+                const res = await fetch(`${API}/api/qrcode?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+
+                document.getElementById('qrImage').src = data.qrcode;
+                document.getElementById('qrImage').style.display = 'block';
+                document.getElementById('cardQR').src = data.qrcode;
+                document.getElementById('qrUrl').textContent = data.url;
+            } catch (e) {
+                showToast('QR-Code Generierung fehlgeschlagen', 'error');
+            }
+        }
+
+        function downloadQR() {
+            const img = document.getElementById('qrImage');
+            if (!img.src) return;
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = 'hochzeit-qr-code.png';
+            a.click();
+        }
+
+        // ===== Druckmodus =====
+        let currentPrintMode = 'card';
+
+        function setPrintMode(mode) {
+            currentPrintMode = mode;
+            const btnCard = document.getElementById('btnModeCard');
+            const btnGrid = document.getElementById('btnModeGrid');
+            const desc = document.getElementById('printModeDesc');
+            const gridCard = document.getElementById('qrGridCard');
+
+            if (mode === 'card') {
+                btnCard.className = 'btn active';
+                btnGrid.className = 'btn btn-ghost';
+                desc.textContent = 'Druckt eine einzelne Tischkarte mit QR-Code, Titel und Anleitung – ideal zum Aufstellen auf dem Tisch.';
+                gridCard.style.display = 'none';
+            } else {
+                btnCard.className = 'btn btn-ghost';
+                btnGrid.className = 'btn active';
+                desc.textContent = 'Druckt 12 QR-Codes auf eine A4-Seite – ideal zum Ausschneiden und Verteilen.';
+                gridCard.style.display = 'block';
+                buildQrGrid();
+            }
+        }
+
+        function buildQrGrid() {
+            const img = document.getElementById('cardQR');
+            if (!img.src) return;
+            const url = document.getElementById('qrUrl').textContent;
+            const grid = document.getElementById('qrGridInner');
+            grid.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                grid.innerHTML += `
+                    <div class="qr-grid-item">
+                        <img src="${img.src}" alt="QR">
+                        <div class="qr-grid-label">${url}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function printSelected() {
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = '';
+
+            if (currentPrintMode === 'card') {
+                // Tischkarte klonen
+                const card = document.getElementById('tableCard').cloneNode(true);
+                card.removeAttribute('id');
+                printArea.appendChild(card);
+            } else {
+                // QR Grid aufbauen
+                const img = document.getElementById('cardQR');
+                const url = document.getElementById('qrUrl').textContent;
+                const grid = document.createElement('div');
+                grid.className = 'qr-grid-print';
+                for (let i = 0; i < 12; i++) {
+                    grid.innerHTML += `
+                        <div class="qr-grid-item">
+                            <img src="${img.src}" alt="QR">
+                            <div class="qr-grid-label">${url}</div>
+                        </div>
+                    `;
+                }
+                printArea.appendChild(grid);
+            }
+
+            setTimeout(() => window.print(), 150);
+        }
+
+        // Nach dem Drucken aufräumen
+        window.addEventListener('afterprint', () => {
+            document.getElementById('printArea').innerHTML = '';
+        });
+
+        function logout() { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+        function showToast(msg, type) {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div'); t.className = `toast toast-${type}`; t.textContent = msg;
+            c.appendChild(t); setTimeout(() => t.remove(), 4000);
+        }
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>

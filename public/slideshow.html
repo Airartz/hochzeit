@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live-Diashow – Hochzeits-Galerie</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/template-loader.js"></script>
+    <style>
+        body {
+            background: #000;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .slideshow-container {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide img {
+            max-width: 100vw;
+            max-height: 100vh;
+            object-fit: contain;
+        }
+
+        .slideshow-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 24px 32px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: #fff;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .slideshow-container:hover .slideshow-overlay {
+            opacity: 1;
+        }
+
+        .slideshow-info h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+            color: #C9A84C;
+        }
+
+        .slideshow-info p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .slideshow-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .slideshow-controls button {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: none;
+            color: #fff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .slideshow-controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .slideshow-counter {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            z-index: 10;
+        }
+
+        .new-photo-indicator {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            background: rgba(201, 168, 76, 0.9);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+        }
+
+        .new-photo-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slideshow-title-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 20;
+            background: #000;
+            animation: titleFade 4s ease forwards;
+        }
+
+        .slideshow-title-overlay h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: #C9A84C;
+            margin-bottom: 12px;
+        }
+
+        .slideshow-title-overlay p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1rem;
+        }
+
+        @keyframes titleFade {
+
+            0%,
+            70% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                pointer-events: none;
+            }
+        }
+
+        /* Text-Sequenz Overlay */
+        .sequence-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            background: rgba(0, 0, 0, 0.85);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        .sequence-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sequence-content {
+            text-align: center;
+            padding: 48px;
+            max-width: 80vw;
+            animation: sequencePulse 3s ease infinite;
+        }
+
+        .sequence-content .seq-emoji {
+            font-size: 4rem;
+            margin-bottom: 24px;
+            display: block;
+        }
+
+        .sequence-content .seq-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #C9A84C;
+            line-height: 1.4;
+            text-shadow: 0 2px 20px rgba(201, 168, 76, 0.3);
+        }
+
+        .sequence-content .seq-divider {
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #C9A84C, transparent);
+            margin: 24px auto;
+        }
+
+        @keyframes sequencePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Title -->
+    <div class="slideshow-title-overlay" id="titleOverlay">
+        <h1 id="slideshowTitle">📸 Live-Diashow</h1>
+        <p id="slideshowSubtitle">Die schönsten Momente unserer Hochzeit</p>
+    </div>
+
+    <div class="slideshow-container" id="slideshowContainer">
+        <div class="slide active" id="slide1"><img src="" alt=""></div>
+        <div class="slide" id="slide2"><img src="" alt=""></div>
+    </div>
+
+    <!-- Text-Sequenz Overlay -->
+    <div class="sequence-overlay" id="sequenceOverlay">
+        <div class="sequence-content">
+            <span class="seq-emoji">💒</span>
+            <div class="seq-divider"></div>
+            <p class="seq-text" id="sequenceText"></p>
+            <div class="seq-divider"></div>
+        </div>
+    </div>
+
+    <div class="new-photo-indicator" id="newPhotoIndicator">📸 Neues Foto!</div>
+    <div class="slideshow-counter" id="counter"></div>
+
+    <div class="slideshow-overlay">
+        <div class="slideshow-info">
+            <h2 id="photoGuest"></h2>
+            <p id="photoTime"></p>
+        </div>
+        <div class="slideshow-controls">
+            <button onclick="prevSlide()" title="Zurück">◀</button>
+            <button onclick="togglePause()" id="pauseBtn" title="Pause/Play">⏸</button>
+            <button onclick="nextSlide()" title="Weiter">▶</button>
+            <button onclick="toggleFullscreen()" title="Vollbild">⛶</button>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+        let photos = [];
+        let currentIndex = 0;
+        let isPaused = false;
+        let slideInterval;
+        let speed = 5000;
+        let lastCheck = null;
+        let activeSlide = 1;
+
+        // Text-Sequenzen
+        let sequences = [];
+        let sequenceInterval = 20; // Minuten
+        let currentSequenceIndex = 0;
+        let sequenceTimer = null;
+        let sequenceDisplayDuration = 8000; // 8 Sekunden anzeigen
+
+        async function init() {
+            try {
+                const settingsRes = await fetch(`${API}/api/gallery`);
+                const settings = await settingsRes.json();
+                speed = (settings.slideshow_speed || 5) * 1000;
+
+                if (settings.title) {
+                    document.getElementById('slideshowTitle').textContent = settings.title;
+                }
+                if (settings.couple_names) {
+                    document.getElementById('slideshowSubtitle').textContent =
+                        `Die schönsten Momente von ${settings.couple_names}`;
+                }
+
+                // Text-Sequenzen laden
+                try {
+                    sequences = JSON.parse(settings.slideshow_sequences || '[]');
+                } catch (e) { sequences = []; }
+                sequenceInterval = settings.slideshow_sequence_interval || 20;
+
+            } catch (e) { }
+
+            await loadPhotos();
+            startSlideshow();
+
+            // Alle 30 Sekunden nach neuen Fotos suchen
+            setInterval(checkNewPhotos, 30000);
+
+            // Text-Sequenz Timer starten (wenn Sequenzen vorhanden)
+            startSequenceTimer();
+        }
+
+        async function loadPhotos() {
+            try {
+                const res = await fetch(`${API}/api/slideshow/all`);
+                const newPhotos = await res.json();
+
+                if (newPhotos.length > photos.length && photos.length > 0) {
+                    // Neue Fotos hinzufügen ohne aktuelle Position zu verlieren
+                    const newIds = new Set(photos.map(p => p.id));
+                    const added = newPhotos.filter(p => !newIds.has(p.id));
+                    if (added.length > 0) {
+                        photos = [...photos, ...added];
+                        showNewPhotoIndicator(added.length);
+                    }
+                } else if (photos.length === 0) {
+                    photos = newPhotos;
+                }
+
+                lastCheck = new Date().toISOString();
+                if (photos.length > 0 && currentIndex === 0) showSlide(0);
+            } catch (e) {
+                console.error('Fotos laden fehlgeschlagen:', e);
+            }
+        }
+
+        async function checkNewPhotos() {
+            if (!lastCheck) return;
+            try {
+                const res = await fetch(`${API}/api/slideshow/latest?since=${encodeURIComponent(lastCheck)}`);
+                const newPhotos = await res.json();
+                if (newPhotos.length > 0) {
+                    // Neue Fotos am Ende anhängen (werden in der nächsten Runde gezeigt)
+                    photos = [...photos, ...newPhotos];
+                    lastCheck = new Date().toISOString();
+                    showNewPhotoIndicator(newPhotos.length);
+                }
+            } catch (e) { }
+        }
+
+        function showNewPhotoIndicator(count) {
+            const indicator = document.getElementById('newPhotoIndicator');
+            indicator.textContent = `📸 ${count} neue(s) Foto(s)!`;
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 3000);
+        }
+
+        function showSlide(index) {
+            if (photos.length === 0) return;
+            currentIndex = index % photos.length;
+            const photo = photos[currentIndex];
+
+            const nextSlideNum = activeSlide === 1 ? 2 : 1;
+            const nextEl = document.getElementById(`slide${nextSlideNum}`);
+            const currEl = document.getElementById(`slide${activeSlide}`);
+
+            nextEl.querySelector('img').src = `/uploads/media/${photo.stored_filename}`;
+
+            setTimeout(() => {
+                currEl.classList.remove('active');
+                nextEl.classList.add('active');
+                activeSlide = nextSlideNum;
+            }, 50);
+
+            document.getElementById('photoGuest').textContent = `📸 ${photo.guest_name}`;
+            document.getElementById('photoTime').textContent = new Date(photo.uploaded_at)
+                .toLocaleDateString('de-DE', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' });
+            document.getElementById('counter').textContent = `${currentIndex + 1} / ${photos.length}`;
+        }
+
+        function startSlideshow() {
+            if (slideInterval) clearInterval(slideInterval);
+            slideInterval = setInterval(() => {
+                if (!isPaused && photos.length > 0) nextSlide();
+            }, speed);
+        }
+
+        function nextSlide() { showSlide(currentIndex + 1); }
+        function prevSlide() { showSlide(currentIndex - 1 + photos.length); }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').textContent = isPaused ? '▶' : '⏸';
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // ===== Text-Sequenzen =====
+
+        function startSequenceTimer() {
+            if (sequences.length === 0) return;
+            // Erste Sequenz nach dem eingestellten Intervall
+            sequenceTimer = setInterval(() => {
+                showSequence();
+            }, sequenceInterval * 60 * 1000);
+        }
+
+        function showSequence() {
+            if (sequences.length === 0) return;
+
+            // Slideshow pausieren während Sequenz
+            const wasPaused = isPaused;
+            isPaused = true;
+
+            // Text setzen
+            const text = sequences[currentSequenceIndex % sequences.length];
+            document.getElementById('sequenceText').textContent = text;
+
+            // Overlay einblenden
+            document.getElementById('sequenceOverlay').classList.add('active');
+
+            // Nach Anzeigedauer wieder ausblenden
+            setTimeout(() => {
+                document.getElementById('sequenceOverlay').classList.remove('active');
+
+                // Slideshow fortsetzen
+                if (!wasPaused) {
+                    isPaused = false;
+                }
+
+                // Nächste Sequenz für nächstes Mal
+                currentSequenceIndex = (currentSequenceIndex + 1) % sequences.length;
+            }, sequenceDisplayDuration);
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === ' ') { e.preventDefault(); togglePause(); }
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+        });
+
+        init();
+    </script>
+</body>
+
+</html>

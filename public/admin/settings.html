@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einstellungen – Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .template-card {
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 12px;
+            transition: all 0.25s ease;
+            background: var(--surface, #fff);
+        }
+
+        .template-card:hover {
+            border-color: rgba(201, 168, 76, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .template-card.active {
+            border-color: var(--primary, #C9A84C);
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15), 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .template-preview {
+            border-radius: 8px;
+            padding: 16px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .template-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 10px;
+            color: var(--text-primary);
+        }
+
+        .template-card.active .template-name::after {
+            content: ' ✓';
+            color: var(--primary, #C9A84C);
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/admin/dashboard.html" class="navbar-brand"><span class="icon">⚙️</span> Admin Dashboard</a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/admin/dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="/admin/guests.html">👥 Gäste</a></li>
+                    <li><a href="/admin/albums.html">📁 Alben</a></li>
+                    <li><a href="/admin/challenges.html">🎯 Challenges</a></li>
+                    <li><a href="/admin/settings.html" class="active">⚙️ Einstellungen</a></li>
+                    <li><a href="/admin/qrcode.html">📱 QR-Code</a></li>
+                    <li><a href="/admin/countdown.html">⏳ Countdown</a></li>
+                    <li><a href="/" target="_blank">🌐 Zur Galerie</a></li>
+                    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container" style="max-width:800px">
+                <h1 class="mb-3 fade-in">⚙️ Galerie-Einstellungen</h1>
+
+                <form id="settingsForm" onsubmit="return saveSettings(event)">
+                    <!-- Allgemein -->
+                    <div class="card fade-in mb-3">
+                        <h3 class="mb-2">📝 Allgemein</h3>
+                        <div class="form-group">
+                            <label for="galleryUrl">🔗 Galerie-URL (für QR-Code & Teilen)</label>
+                            <input type="url" id="galleryUrl" class="form-control"
+                                placeholder="z.B. https://eure-hochzeit.de">
+                            <small class="text-muted" style="font-size:0.8rem; margin-top:4px; display:block">
+                                Leer lassen = Standard-Server-URL wird verwendet. Eigene Domain eintragen → QR-Code &
+                                alles passt sich automatisch an.
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="title">Galerie-Titel</label>
+                            <input type="text" id="title" class="form-control" placeholder="z.B. Unsere Hochzeit">
+                        </div>
+                        <div class="form-group">
+                            <label for="coupleNames">Namen des Brautpaars</label>
+                            <input type="text" id="coupleNames" class="form-control" placeholder="z.B. Anna & Max">
+                        </div>
+                        <div class="form-group">
+                            <label for="subtitle">Untertitel</label>
+                            <input type="text" id="subtitle" class="form-control" placeholder="z.B. 18. Februar 2026">
+                        </div>
+                        <div class="form-group">
+                            <label for="weddingDate">Hochzeitsdatum</label>
+                            <input type="date" id="weddingDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="welcomeText">Willkommenstext</label>
+                            <textarea id="welcomeText" class="form-control" rows="3"
+                                placeholder="Teilt eure schönsten Momente mit uns..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Design -->
+                    <div class="card fade-in mb-3">
+                        <h3 class="mb-2">🎨 Design</h3>
+
+                        <!-- Template Auswahl -->
+                        <div class="form-group" style="margin-bottom:20px">
+                            <label style="font-weight:600; margin-bottom:10px; display:block">🖼️ Template</label>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px"
+                                id="templatePicker">
+                                <!-- Classic -->
+                                <div class="template-card active" data-template="classic"
+                                    onclick="selectTemplate('classic')">
+                                    <div class="template-preview"
+                                        style="background:linear-gradient(135deg,#FFF8F0,#F5F0E8); border:1px solid #e8e0d0">
+                                        <div
+                                            style="width:40px;height:4px;background:#C9A84C;border-radius:2px;margin-bottom:6px">
+                                        </div>
+                                        <div
+                                            style="width:60px;height:3px;background:#2C2C2C;border-radius:2px;opacity:0.3;margin-bottom:4px">
+                                        </div>
+                                        <div
+                                            style="width:45px;height:3px;background:#2C2C2C;border-radius:2px;opacity:0.2">
+                                        </div>
+                                        <div style="display:flex;gap:4px;margin-top:8px">
+                                            <div
+                                                style="width:14px;height:14px;background:#C9A84C;border-radius:4px;opacity:0.5">
+                                            </div>
+                                            <div
+                                                style="width:14px;height:14px;background:#C9A84C;border-radius:4px;opacity:0.3">
+                                            </div>
+                                            <div
+                                                style="width:14px;height:14px;background:#C9A84C;border-radius:4px;opacity:0.2">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="template-name">✨ Classic Gold</div>
+                                </div>
+                                <!-- Botanical -->
+                                <div class="template-card" data-template="botanical"
+                                    onclick="selectTemplate('botanical')">
+                                    <div class="template-preview"
+                                        style="background:linear-gradient(135deg,#e8f0e6,#f0f7ee); border:1px solid #c5dcc2">
+                                        <div
+                                            style="width:40px;height:4px;background:#7A9E77;border-radius:2px;margin-bottom:6px">
+                                        </div>
+                                        <div
+                                            style="width:60px;height:3px;background:#2D3B2C;border-radius:2px;opacity:0.3;margin-bottom:4px">
+                                        </div>
+                                        <div
+                                            style="width:45px;height:3px;background:#2D3B2C;border-radius:2px;opacity:0.2">
+                                        </div>
+                                        <div style="display:flex;gap:4px;margin-top:8px">
+                                            <div
+                                                style="width:14px;height:14px;background:#7A9E77;border-radius:4px;opacity:0.5">
+                                            </div>
+                                            <div
+                                                style="width:14px;height:14px;background:#7A9E77;border-radius:4px;opacity:0.3">
+                                            </div>
+                                            <div
+                                                style="width:14px;height:14px;background:#7A9E77;border-radius:4px;opacity:0.2">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="template-name">🌿 Botanical Green</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="siteTemplate" value="classic">
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px">
+                            <div class="form-group">
+                                <label for="primaryColor">Primärfarbe (Gold)</label>
+                                <div class="flex gap-1" style="align-items:center">
+                                    <input type="color" id="primaryColor" value="#C9A84C"
+                                        style="width:48px;height:40px;border:none;cursor:pointer;border-radius:8px">
+                                    <input type="text" id="primaryColorText" class="form-control" value="#C9A84C"
+                                        style="flex:1"
+                                        oninput="document.getElementById('primaryColor').value = this.value">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="secondaryColor">Sekundärfarbe</label>
+                                <div class="flex gap-1" style="align-items:center">
+                                    <input type="color" id="secondaryColor" value="#2C2C2C"
+                                        style="width:48px;height:40px;border:none;cursor:pointer;border-radius:8px">
+                                    <input type="text" id="secondaryColorText" class="form-control" value="#2C2C2C"
+                                        style="flex:1"
+                                        oninput="document.getElementById('secondaryColor').value = this.value">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="backgroundColor">Hintergrundfarbe</label>
+                                <div class="flex gap-1" style="align-items:center">
+                                    <input type="color" id="backgroundColor" value="#FFF8F0"
+                                        style="width:48px;height:40px;border:none;cursor:pointer;border-radius:8px">
+                                    <input type="text" id="backgroundColorText" class="form-control" value="#FFF8F0"
+                                        style="flex:1"
+                                        oninput="document.getElementById('backgroundColor').value = this.value">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diashow -->
+                    <div class="card fade-in mb-3">
+                        <h3 class="mb-2">📺 Diashow</h3>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+                            <div class="form-group">
+                                <label for="slideshowSpeed">Geschwindigkeit (Sekunden)</label>
+                                <input type="number" id="slideshowSpeed" class="form-control" min="2" max="30"
+                                    value="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="slideshowTransition">Übergang</label>
+                                <select id="slideshowTransition" class="form-control">
+                                    <option value="fade">Einblenden</option>
+                                    <option value="slide">Gleiten</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+                        <h4 class="mb-2">✨ Texteinblendungen</h4>
+                        <p class="text-muted mb-2" style="font-size:0.85rem">
+                            Texte die regelmäßig zwischen den Fotos eingeblendet werden (z.B. Sprüche, Grüße, Infos).
+                        </p>
+
+                        <div class="form-group" style="max-width:250px">
+                            <label for="sequenceInterval">Einblendung alle (Minuten)</label>
+                            <input type="number" id="sequenceInterval" class="form-control" min="1" max="120"
+                                value="20">
+                        </div>
+
+                        <div id="sequenceList"></div>
+
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addSequence()"
+                            style="margin-top:8px">
+                            ➕ Text hinzufügen
+                        </button>
+                    </div>
+
+                    <!-- Privatsphäre & Downloads -->
+                    <div class="card fade-in mb-3">
+                        <h3 class="mb-2">🔒 Privatsphäre & Downloads</h3>
+                        <label class="flex gap-2 mb-2" style="align-items:center; cursor:pointer">
+                            <input type="checkbox" id="allowGuestDownload" checked style="width:20px;height:20px">
+                            <span>Gäste dürfen alle Fotos herunterladen</span>
+                        </label>
+
+                        <div id="downloadDisabledOptions">
+                            <div class="form-group">
+                                <label for="downloadDisabledMessage">Nachricht wenn Downloads deaktiviert sind</label>
+                                <textarea id="downloadDisabledMessage" class="form-control" rows="2"
+                                    placeholder="z.B. Die Fotos stehen bald zum Download bereit!"></textarea>
+                            </div>
+
+                            <label class="flex gap-2 mb-2" style="align-items:center; cursor:pointer">
+                                <input type="checkbox" id="countdownEnabled" style="width:20px;height:20px">
+                                <span>Countdown anzeigen (z.B. bis Hochzeitstag)</span>
+                            </label>
+
+                            <div class="form-group" id="countdownDateGroup" style="display:none">
+                                <label for="countdownDate">Countdown bis</label>
+                                <input type="datetime-local" id="countdownDate" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">💾 Speichern</button>
+                        <a href="/" target="_blank" class="btn btn-secondary">👁️ Vorschau</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login.html';
+
+        async function init() {
+            try {
+                const res = await fetch(`${API}/api/gallery`);
+                const s = await res.json();
+
+                if (s.gallery_url) document.getElementById('galleryUrl').value = s.gallery_url;
+                if (s.title) document.getElementById('title').value = s.title;
+                if (s.couple_names) document.getElementById('coupleNames').value = s.couple_names;
+                if (s.subtitle) document.getElementById('subtitle').value = s.subtitle;
+                if (s.wedding_date) document.getElementById('weddingDate').value = s.wedding_date.split('T')[0];
+                if (s.welcome_text) document.getElementById('welcomeText').value = s.welcome_text;
+                if (s.primary_color) {
+                    document.getElementById('primaryColor').value = s.primary_color;
+                    document.getElementById('primaryColorText').value = s.primary_color;
+                }
+                if (s.secondary_color) {
+                    document.getElementById('secondaryColor').value = s.secondary_color;
+                    document.getElementById('secondaryColorText').value = s.secondary_color;
+                }
+                if (s.background_color) {
+                    document.getElementById('backgroundColor').value = s.background_color;
+                    document.getElementById('backgroundColorText').value = s.background_color;
+                }
+                if (s.slideshow_speed) document.getElementById('slideshowSpeed').value = s.slideshow_speed;
+                if (s.slideshow_transition) document.getElementById('slideshowTransition').value = s.slideshow_transition;
+
+                // Texteinblendungen
+                if (s.slideshow_sequence_interval) document.getElementById('sequenceInterval').value = s.slideshow_sequence_interval;
+                try {
+                    const seqs = JSON.parse(s.slideshow_sequences || '[]');
+                    seqs.forEach(text => addSequence(text));
+                } catch (e) { }
+
+                // Privatsphäre
+                const dlAllowed = s.allow_guest_download == 1 || s.allow_guest_download === true;
+                document.getElementById('allowGuestDownload').checked = dlAllowed;
+                toggleDownloadOptions();
+
+                if (s.download_disabled_message) {
+                    document.getElementById('downloadDisabledMessage').value = s.download_disabled_message;
+                }
+
+                const cdEnabled = s.countdown_enabled == 1 || s.countdown_enabled === true;
+                document.getElementById('countdownEnabled').checked = cdEnabled;
+                toggleCountdownDate();
+
+                if (s.countdown_date) {
+                    document.getElementById('countdownDate').value = s.countdown_date.slice(0, 16);
+                }
+
+                // Template
+                if (s.site_template) {
+                    document.getElementById('siteTemplate').value = s.site_template;
+                    selectTemplate(s.site_template, false);
+                }
+            } catch (e) { }
+
+            // Color picker sync
+            ['primary', 'secondary', 'background'].forEach(c => {
+                document.getElementById(`${c}Color`).addEventListener('input', e => {
+                    document.getElementById(`${c}ColorText`).value = e.target.value;
+                });
+            });
+
+            // Toggle-Logik
+            document.getElementById('allowGuestDownload').addEventListener('change', toggleDownloadOptions);
+            document.getElementById('countdownEnabled').addEventListener('change', toggleCountdownDate);
+        }
+
+        function toggleDownloadOptions() {
+            const allowed = document.getElementById('allowGuestDownload').checked;
+            document.getElementById('downloadDisabledOptions').style.display = allowed ? 'none' : 'block';
+        }
+
+        function toggleCountdownDate() {
+            const enabled = document.getElementById('countdownEnabled').checked;
+            document.getElementById('countdownDateGroup').style.display = enabled ? 'block' : 'none';
+        }
+
+        function addSequence(text = '') {
+            const list = document.getElementById('sequenceList');
+            const row = document.createElement('div');
+            row.className = 'flex gap-1 mb-1';
+            row.style.alignItems = 'center';
+            row.innerHTML = `
+                <input type="text" class="form-control sequence-input" value="${text}" 
+                    placeholder="z.B. Wir freuen uns, dass ihr da seid! ❤️" style="flex:1">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()" 
+                    style="padding:8px 12px;min-width:auto">❌</button>
+            `;
+            list.appendChild(row);
+        }
+
+        function getSequences() {
+            return Array.from(document.querySelectorAll('.sequence-input'))
+                .map(el => el.value.trim())
+                .filter(t => t.length > 0);
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            try {
+                const formData = new FormData();
+                formData.append('gallery_url', document.getElementById('galleryUrl').value);
+                formData.append('title', document.getElementById('title').value);
+                formData.append('couple_names', document.getElementById('coupleNames').value);
+                formData.append('subtitle', document.getElementById('subtitle').value);
+                formData.append('wedding_date', document.getElementById('weddingDate').value);
+                formData.append('welcome_text', document.getElementById('welcomeText').value);
+                formData.append('primary_color', document.getElementById('primaryColor').value);
+                formData.append('secondary_color', document.getElementById('secondaryColor').value);
+                formData.append('background_color', document.getElementById('backgroundColor').value);
+                formData.append('slideshow_speed', document.getElementById('slideshowSpeed').value);
+                formData.append('slideshow_transition', document.getElementById('slideshowTransition').value);
+                formData.append('allow_guest_download', document.getElementById('allowGuestDownload').checked);
+                formData.append('download_disabled_message', document.getElementById('downloadDisabledMessage').value);
+                formData.append('countdown_enabled', document.getElementById('countdownEnabled').checked);
+                formData.append('countdown_date', document.getElementById('countdownDate').value);
+                formData.append('slideshow_sequences', JSON.stringify(getSequences()));
+                formData.append('slideshow_sequence_interval', document.getElementById('sequenceInterval').value);
+                formData.append('site_template', document.getElementById('siteTemplate').value);
+
+                const res = await fetch(`${API}/api/gallery`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error('Speichern fehlgeschlagen');
+
+                showToast('Einstellungen gespeichert! ✅', 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+            return false;
+        }
+
+        function logout() { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+        function showToast(msg, type) {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        }
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        function selectTemplate(tpl, showFeedback = true) {
+            document.getElementById('siteTemplate').value = tpl;
+            document.querySelectorAll('.template-card').forEach(c => {
+                c.classList.toggle('active', c.dataset.template === tpl);
+            });
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

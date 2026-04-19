@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fotos hochladen – Hochzeits-Galerie</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/template-loader.js"></script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📸</text></svg>">
+    <style>
+        /* Name-Popup Overlay */
+        .name-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeInOverlay 0.4s ease;
+        }
+
+        @keyframes fadeInOverlay {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .name-popup {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.85) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .name-popup .popup-emoji {
+            font-size: 4rem;
+            margin-bottom: 12px;
+        }
+
+        .name-popup h2 {
+            font-family: var(--font-display);
+            margin-bottom: 8px;
+            font-size: 1.6rem;
+        }
+
+        .name-popup p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+
+        .name-popup .form-control {
+            text-align: center;
+            font-size: 1.1rem;
+            padding: 16px;
+        }
+
+        .name-popup .btn {
+            width: 100%;
+            margin-top: 16px;
+            padding: 16px;
+            font-size: 1.05rem;
+        }
+
+        .name-popup.hidden {
+            display: none;
+        }
+
+        /* Willkommen zurück Badge */
+        .welcome-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(201, 168, 76, 0.12);
+            color: var(--primary-dark);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .welcome-badge:hover {
+            border-color: var(--primary);
+            background: rgba(201, 168, 76, 0.2);
+        }
+
+        .welcome-badge .change-name {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/" class="navbar-brand"><span class="icon">💒</span><span id="navTitle">Unsere
+                        Hochzeit</span></a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/">Start</a></li>
+                    <li><a href="/hochladen" class="active">📸 Hochladen</a></li>
+                    <li><a href="/galerie">🖼️ Galerie</a></li>
+                    <li><a href="/spiel">🎯 Challenges</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Name Popup -->
+        <div class="name-overlay" id="nameOverlay">
+            <div class="name-popup">
+                <div class="popup-emoji">👋</div>
+                <h2>Willkommen!</h2>
+                <p>Bitte gib deinen Vornamen ein, damit wir wissen, von wem die Fotos sind.</p>
+                <div class="form-group" style="margin-bottom:0">
+                    <input type="text" id="guestName" class="form-control" placeholder="Dein Vorname"
+                        autocomplete="given-name" autofocus>
+                </div>
+                <button class="btn btn-primary" id="nameSubmitBtn" onclick="submitName()">
+                    📸 Weiter zum Upload
+                </button>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <div class="container" style="max-width:700px">
+                <!-- Upload Content (initially hidden) -->
+                <div id="uploadContent" style="display:none">
+
+                    <div class="text-center mb-3 fade-in">
+                        <div class="welcome-badge" onclick="changeName()" title="Name ändern">
+                            <span>👋</span>
+                            <span>Hallo, <strong id="displayName"></strong>!</span>
+                            <span class="change-name">✏️</span>
+                        </div>
+                        <h1>📸 Fotos & Videos hochladen</h1>
+                        <p class="text-muted mt-1">Teile deine besten Momente mit dem Brautpaar!</p>
+                    </div>
+
+                    <!-- Album-Auswahl -->
+                    <div class="card fade-in mb-3">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label for="albumSelect">Album auswählen</label>
+                            <select id="albumSelect" class="form-control">
+                                <option value="1">Hochzeit</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Challenge (optional) -->
+                    <div class="card fade-in mb-3" id="challengeCard" style="display:none">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label>📸 Foto-Challenge</label>
+                            <div id="challengeInfo" class="text-muted" style="font-size:0.9rem"></div>
+                            <input type="hidden" id="challengeId">
+                        </div>
+                    </div>
+
+                    <!-- Upload Zone -->
+                    <div class="upload-zone fade-in" id="uploadZone" onclick="triggerFileSelect()">
+                        <div class="upload-icon">📱</div>
+                        <h3>Foto aufnehmen oder auswählen</h3>
+                        <p>Wird automatisch hochgeladen!</p>
+                        <p style="font-size:0.8rem; margin-top:8px; color:var(--text-light)">JPG, PNG, GIF, HEIC, MP4,
+                            MOV – unbegrenzte Anzahl</p>
+                        <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+                    </div>
+
+                    <!-- Progress -->
+                    <div class="upload-progress-container" id="progressContainer" style="display:none"></div>
+
+                    <!-- Uploaded Files List -->
+                    <div id="uploadedList" class="mt-3" style="display:none">
+                        <div class="flex-between mb-2">
+                            <h3 id="uploadedCount">0 Dateien hochgeladen</h3>
+                        </div>
+                        <div id="uploadedGrid" class="gallery-grid"
+                            style="grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:8px"></div>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-primary" onclick="triggerFileSelect()">📸 Weitere Fotos
+                                aufnehmen</button>
+                            <a href="/galerie" class="btn btn-secondary" style="margin-left:8px">🖼️ Galerie
+                                ansehen</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> für unsere Hochzeit</p>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        let uploadedFiles = [];
+        let guestName = '';
+
+        // URL-Parameter für Challenge
+        const urlParams = new URLSearchParams(window.location.search);
+        const challengeParam = urlParams.get('challenge');
+
+        async function init() {
+            await loadSettings();
+            await loadAlbums();
+            if (challengeParam) await loadChallenge(challengeParam);
+            setupDragDrop();
+
+            // Prüfe ob Name schon gespeichert ist
+            const savedName = localStorage.getItem('guestName');
+            if (savedName && savedName.trim().length > 0) {
+                document.getElementById('guestName').value = savedName;
+                guestName = savedName.trim();
+                showUploadArea();
+            }
+
+            // Enter-Taste im Name-Input
+            document.getElementById('guestName').addEventListener('keydown', e => {
+                if (e.key === 'Enter') submitName();
+            });
+        }
+
+        function submitName() {
+            const input = document.getElementById('guestName');
+            const name = input.value.trim();
+            if (!name) {
+                input.style.borderColor = '#e74c3c';
+                input.style.animation = 'none';
+                input.offsetHeight; // trigger reflow
+                input.style.animation = 'shake 0.4s ease';
+                showToast('Bitte gib deinen Vornamen ein!', 'error');
+                input.focus();
+                return;
+            }
+
+            guestName = name;
+            localStorage.setItem('guestName', name);
+            showUploadArea();
+        }
+
+        function showUploadArea() {
+            // Popup ausblenden
+            const overlay = document.getElementById('nameOverlay');
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+
+            // Upload-Bereich einblenden
+            document.getElementById('uploadContent').style.display = 'block';
+            document.getElementById('displayName').textContent = guestName;
+        }
+
+        function changeName() {
+            // Popup wieder anzeigen
+            const overlay = document.getElementById('nameOverlay');
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+            document.getElementById('guestName').value = guestName;
+            document.getElementById('guestName').focus();
+            document.getElementById('guestName').select();
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API}/api/gallery`);
+                const s = await res.json();
+                if (s.title) document.getElementById('navTitle').textContent = s.title;
+                if (s.primary_color) document.documentElement.style.setProperty('--primary', s.primary_color);
+                if (s.background_color) document.documentElement.style.setProperty('--background', s.background_color);
+            } catch (e) { }
+        }
+
+        async function loadAlbums() {
+            try {
+                const res = await fetch(`${API}/api/albums`);
+                const albums = await res.json();
+                const select = document.getElementById('albumSelect');
+                select.innerHTML = albums.map(a =>
+                    `<option value="${a.id}">${a.name}</option>`
+                ).join('');
+            } catch (e) { }
+        }
+
+        async function loadChallenge(id) {
+            try {
+                const res = await fetch(`${API}/api/challenges/${id}`);
+                const challenge = await res.json();
+                document.getElementById('challengeCard').style.display = 'block';
+                document.getElementById('challengeInfo').innerHTML =
+                    `<strong>${challenge.emoji} ${challenge.title}</strong><br>${challenge.description}`;
+                document.getElementById('challengeId').value = id;
+            } catch (e) { }
+        }
+
+        function triggerFileSelect() {
+            document.getElementById('fileInput').click();
+        }
+
+        function setupDragDrop() {
+            const zone = document.getElementById('uploadZone');
+
+            ['dragenter', 'dragover'].forEach(e => {
+                zone.addEventListener(e, ev => { ev.preventDefault(); zone.classList.add('dragover'); });
+            });
+            ['dragleave', 'drop'].forEach(e => {
+                zone.addEventListener(e, ev => { ev.preventDefault(); zone.classList.remove('dragover'); });
+            });
+
+            zone.addEventListener('drop', e => {
+                autoUpload(Array.from(e.dataTransfer.files));
+            });
+
+            document.getElementById('fileInput').addEventListener('change', e => {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) autoUpload(files);
+                e.target.value = '';
+            });
+        }
+
+        async function autoUpload(files) {
+            const validFiles = files.filter(f => /^(image|video)\//.test(f.type));
+            if (validFiles.length === 0) return;
+
+            const albumId = document.getElementById('albumSelect').value;
+            const challengeId = document.getElementById('challengeId').value;
+
+            // Gesamtgröße berechnen
+            const totalSize = validFiles.reduce((s, f) => s + f.size, 0);
+            const totalSizeMB = (totalSize / 1024 / 1024).toFixed(1);
+
+            // Progress anzeigen
+            const progress = document.getElementById('progressContainer');
+            progress.style.display = 'block';
+            progress.innerHTML = `
+                <div class="upload-progress-item">
+                    <div class="file-icon">📤</div>
+                    <div class="file-info" style="flex:1">
+                        <div class="file-name">${validFiles.length} Datei(en) (${totalSizeMB} MB) werden hochgeladen...</div>
+                        <div class="progress-bar"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+                        <div id="progressDetails" style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-secondary);margin-top:6px">
+                            <span id="progressPercent">0%</span>
+                            <span id="progressSpeed"></span>
+                            <span id="progressEta">Berechne...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Upload Zone deaktivieren
+            const zone = document.getElementById('uploadZone');
+            zone.style.opacity = '0.5';
+            zone.style.pointerEvents = 'none';
+
+            const formData = new FormData();
+            formData.append('guest_name', guestName);
+            formData.append('album_id', albumId);
+            if (challengeId) formData.append('challenge_id', challengeId);
+            validFiles.forEach(f => formData.append('files', f));
+
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    const startTime = Date.now();
+
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (!e.lengthComputable) return;
+
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        const elapsed = (Date.now() - startTime) / 1000;
+                        const speed = e.loaded / elapsed; // Bytes/s
+                        const remaining = (e.total - e.loaded) / speed;
+
+                        // UI aktualisieren
+                        const fill = document.getElementById('progressFill');
+                        if (fill) fill.style.width = percent + '%';
+
+                        const pPercent = document.getElementById('progressPercent');
+                        if (pPercent) pPercent.textContent = percent + '%';
+
+                        const pSpeed = document.getElementById('progressSpeed');
+                        if (pSpeed) {
+                            const speedMB = (speed / 1024 / 1024).toFixed(1);
+                            pSpeed.textContent = `${speedMB} MB/s`;
+                        }
+
+                        const pEta = document.getElementById('progressEta');
+                        if (pEta) {
+                            if (percent >= 100) {
+                                pEta.textContent = '⏳ Verarbeitung...';
+                            } else if (remaining < 60) {
+                                pEta.textContent = `⏱ ~${Math.ceil(remaining)} Sek. übrig`;
+                            } else {
+                                const mins = Math.floor(remaining / 60);
+                                const secs = Math.ceil(remaining % 60);
+                                pEta.textContent = `⏱ ~${mins}:${secs.toString().padStart(2, '0')} Min. übrig`;
+                            }
+                        }
+                    });
+
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve(JSON.parse(xhr.responseText));
+                        } else {
+                            try {
+                                const err = JSON.parse(xhr.responseText);
+                                reject(new Error(err.error || 'Upload fehlgeschlagen'));
+                            } catch (e) {
+                                reject(new Error('Upload fehlgeschlagen'));
+                            }
+                        }
+                    });
+
+                    xhr.addEventListener('error', () => reject(new Error('Verbindungsfehler')));
+                    xhr.addEventListener('abort', () => reject(new Error('Upload abgebrochen')));
+
+                    xhr.open('POST', `${API}/api/media/upload`);
+                    xhr.send(formData);
+                });
+
+                // 100% anzeigen
+                const fill = document.getElementById('progressFill');
+                if (fill) fill.style.width = '100%';
+                const pPercent = document.getElementById('progressPercent');
+                if (pPercent) pPercent.textContent = '100%';
+                const pEta = document.getElementById('progressEta');
+                if (pEta) pEta.textContent = '✅ Fertig!';
+
+                showToast(`${result.uploaded.length} Datei(en) hochgeladen! 🎉`, 'success');
+
+                validFiles.forEach(f => uploadedFiles.push(f));
+                updateUploadedList();
+
+                setTimeout(() => { progress.style.display = 'none'; }, 1500);
+
+            } catch (err) {
+                showToast(err.message, 'error');
+                progress.style.display = 'none';
+            }
+
+            zone.style.opacity = '1';
+            zone.style.pointerEvents = '';
+        }
+
+        function updateUploadedList() {
+            const container = document.getElementById('uploadedList');
+            const grid = document.getElementById('uploadedGrid');
+            const count = document.getElementById('uploadedCount');
+
+            if (uploadedFiles.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            count.textContent = `✅ ${uploadedFiles.length} Datei(en) hochgeladen`;
+
+            grid.innerHTML = uploadedFiles.map((f, i) => {
+                const isVideo = f.type.startsWith('video');
+                const url = URL.createObjectURL(f);
+                return `
+                    <div class="gallery-item fade-in" style="aspect-ratio:1; border-radius:8px">
+                        ${isVideo
+                        ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover"></video><span class="video-badge">🎬</span>`
+                        : `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`}
+                        <div class="overlay" style="opacity:1; background:linear-gradient(transparent 60%, rgba(39,174,96,0.8))">
+                            <span style="font-size:0.8rem">✅</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function toggleNav() {
+            document.getElementById('navLinks').classList.toggle('open');
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

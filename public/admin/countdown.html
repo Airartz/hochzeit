@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown-Modus – Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-track {
+            width: 56px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            position: relative;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .toggle-track.active {
+            background: var(--primary);
+        }
+
+        .toggle-thumb {
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .toggle-track.active .toggle-thumb {
+            transform: translateX(26px);
+        }
+
+        .toggle-label {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: rgba(76, 175, 80, 0.15);
+            color: #2E7D32;
+        }
+
+        .status-badge.inactive {
+            background: rgba(158, 158, 158, 0.15);
+            color: #666;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-badge.active .status-dot {
+            background: #4CAF50;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .status-badge.inactive .status-dot {
+            background: #999;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+        }
+
+        .preview-box {
+            background: var(--secondary, #2C2C2C);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-box h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+
+        .preview-box p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .preview-timer {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .preview-unit {
+            text-align: center;
+        }
+
+        .preview-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .preview-label {
+            font-size: 0.65rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        .preview-sep {
+            font-size: 1.5rem;
+            color: var(--primary);
+            opacity: 0.4;
+            align-self: flex-start;
+            margin-top: 4px;
+        }
+
+        .info-hint {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: rgba(201, 168, 76, 0.08);
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .info-hint .icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/admin/dashboard.html" class="navbar-brand"><span class="icon">⚙️</span> Admin Dashboard</a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/admin/dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="/admin/guests.html">👥 Gäste</a></li>
+                    <li><a href="/admin/albums.html">📁 Alben</a></li>
+                    <li><a href="/admin/challenges.html">🎯 Challenges</a></li>
+                    <li><a href="/admin/settings.html">⚙️ Einstellungen</a></li>
+                    <li><a href="/admin/qrcode.html">📱 QR-Code</a></li>
+                    <li><a href="/admin/countdown.html" class="active">⏳ Countdown</a></li>
+                    <li><a href="/" target="_blank">🌐 Zur Galerie</a></li>
+                    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container" style="max-width:800px">
+                <h1 class="mb-3 fade-in">⏳ Countdown-Modus</h1>
+
+                <!-- Status & Toggle -->
+                <div class="card fade-in mb-3">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px">
+                        <div>
+                            <h3 class="mb-1">Release-Modus</h3>
+                            <p class="text-muted" style="font-size:0.85rem">
+                                Wenn aktiviert, sehen Besucher nur eine Countdown-Seite statt der Galerie.
+                            </p>
+                        </div>
+                        <span class="status-badge inactive" id="statusBadge">
+                            <span class="status-dot"></span>
+                            <span id="statusText">Deaktiviert</span>
+                        </span>
+                    </div>
+
+                    <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border)">
+                        <div class="toggle-switch" onclick="toggleCountdown()">
+                            <div class="toggle-track" id="toggleTrack">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                            <span class="toggle-label" id="toggleLabel">Countdown aktivieren</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Einstellungen -->
+                <div class="card fade-in mb-3">
+                    <h3 class="mb-2">📝 Countdown-Einstellungen</h3>
+
+                    <div class="form-group">
+                        <label for="countdownDate">📅 Countdown-Datum & Uhrzeit</label>
+                        <input type="datetime-local" id="countdownDate" class="form-control">
+                        <small class="text-muted" style="font-size:0.8rem; margin-top:4px; display:block">
+                            Der Countdown zählt bis zu diesem Zeitpunkt herunter.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="countdownHeading">✨ Überschrift</label>
+                        <input type="text" id="countdownHeading" class="form-control" placeholder="z.B. Wir heiraten!">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="countdownText">💬 Beschreibungstext</label>
+                        <textarea id="countdownText" class="form-control" rows="3"
+                            placeholder="z.B. Bald geht es los! Wir freuen uns darauf, diesen besonderen Tag mit euch zu teilen."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveSettings()">💾 Speichern</button>
+                </div>
+
+                <!-- Vorschau -->
+                <div class="card fade-in mb-3">
+                    <h3 class="mb-2">👁️ Vorschau</h3>
+                    <div class="preview-box" id="previewBox">
+                        <h3 id="previewHeading">Wir heiraten!</h3>
+                        <p id="previewText">Bald geht es los!</p>
+                        <div class="preview-timer" id="previewTimer">
+                            <div class="preview-unit">
+                                <div class="preview-value" id="prevDays">00</div>
+                                <div class="preview-label">Tage</div>
+                            </div>
+                            <span class="preview-sep">:</span>
+                            <div class="preview-unit">
+                                <div class="preview-value" id="prevHours">00</div>
+                                <div class="preview-label">Stunden</div>
+                            </div>
+                            <span class="preview-sep">:</span>
+                            <div class="preview-unit">
+                                <div class="preview-value" id="prevMin">00</div>
+                                <div class="preview-label">Min</div>
+                            </div>
+                            <span class="preview-sep">:</span>
+                            <div class="preview-unit">
+                                <div class="preview-value" id="prevSec">00</div>
+                                <div class="preview-label">Sek</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/countdown.html" target="_blank" class="btn btn-secondary mt-2"
+                        style="display:inline-flex; align-items:center; gap:6px">
+                        🔗 Countdown-Seite in neuem Tab öffnen
+                    </a>
+                </div>
+
+                <!-- Info -->
+                <div class="info-hint fade-in mb-3">
+                    <span class="icon">💡</span>
+                    <div>
+                        <strong>Tipp:</strong> Wenn der Countdown aktiv ist, werden alle öffentlichen Seiten
+                        (Startseite, Galerie, Upload, Challenges) automatisch auf die Countdown-Seite umgeleitet.
+                        Das Admin-Panel bleibt erreichbar. Deaktiviere den Modus, wenn die Galerie live gehen soll.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login.html';
+
+        let countdownEnabled = false;
+        let countdownDate = null;
+
+        async function init() {
+            try {
+                const res = await fetch(`${API}/api/gallery`);
+                const s = await res.json();
+
+                countdownEnabled = s.countdown_enabled === 1;
+                updateToggleUI();
+
+                if (s.countdown_date) {
+                    // Datum für datetime-local formatieren
+                    const d = new Date(s.countdown_date);
+                    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+                    document.getElementById('countdownDate').value = local.toISOString().slice(0, 16);
+                    countdownDate = d;
+                }
+
+                document.getElementById('countdownHeading').value = s.countdown_heading || 'Wir heiraten!';
+                document.getElementById('countdownText').value = s.countdown_text || '';
+
+                // Farben für Vorschau
+                if (s.primary_color) {
+                    document.documentElement.style.setProperty('--primary', s.primary_color);
+                }
+                if (s.secondary_color) {
+                    document.documentElement.style.setProperty('--secondary', s.secondary_color);
+                }
+
+                updatePreview();
+                startPreviewTimer();
+            } catch (e) {
+                showToast('Einstellungen konnten nicht geladen werden', 'error');
+            }
+        }
+
+        function updateToggleUI() {
+            const track = document.getElementById('toggleTrack');
+            const label = document.getElementById('toggleLabel');
+            const badge = document.getElementById('statusBadge');
+            const statusText = document.getElementById('statusText');
+
+            if (countdownEnabled) {
+                track.classList.add('active');
+                label.textContent = 'Countdown deaktivieren';
+                badge.className = 'status-badge active';
+                statusText.textContent = 'Aktiv – Besucher sehen Countdown';
+            } else {
+                track.classList.remove('active');
+                label.textContent = 'Countdown aktivieren';
+                badge.className = 'status-badge inactive';
+                statusText.textContent = 'Deaktiviert';
+            }
+        }
+
+        async function toggleCountdown() {
+            countdownEnabled = !countdownEnabled;
+            updateToggleUI();
+
+            const formData = new FormData();
+            formData.append('countdown_enabled', countdownEnabled);
+
+            try {
+                await fetch(`${API}/api/gallery`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                showToast(
+                    countdownEnabled
+                        ? '✅ Countdown aktiviert – Besucher sehen jetzt die Countdown-Seite'
+                        : '🔓 Countdown deaktiviert – Galerie ist wieder erreichbar',
+                    'success'
+                );
+            } catch (e) {
+                showToast('Fehler beim Speichern', 'error');
+            }
+        }
+
+        async function saveSettings() {
+            const heading = document.getElementById('countdownHeading').value.trim();
+            const text = document.getElementById('countdownText').value.trim();
+            const dateVal = document.getElementById('countdownDate').value;
+
+            if (!dateVal) {
+                showToast('Bitte ein Datum angeben', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('countdown_heading', heading || 'Wir heiraten!');
+            formData.append('countdown_text', text);
+            formData.append('countdown_date', new Date(dateVal).toISOString());
+
+            try {
+                const res = await fetch(`${API}/api/gallery`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    showToast('✅ Countdown-Einstellungen gespeichert', 'success');
+                    countdownDate = new Date(dateVal);
+                    updatePreview();
+                } else {
+                    showToast('Fehler beim Speichern', 'error');
+                }
+            } catch (e) {
+                showToast('Fehler beim Speichern', 'error');
+            }
+        }
+
+        function updatePreview() {
+            const heading = document.getElementById('countdownHeading').value || 'Wir heiraten!';
+            const text = document.getElementById('countdownText').value || 'Bald geht es los!';
+            document.getElementById('previewHeading').textContent = heading;
+            document.getElementById('previewText').textContent = text;
+        }
+
+        function startPreviewTimer() {
+            function update() {
+                const dateVal = document.getElementById('countdownDate').value;
+                if (!dateVal) return;
+
+                const target = new Date(dateVal);
+                const diff = target - new Date();
+
+                if (diff <= 0) {
+                    document.getElementById('prevDays').textContent = '00';
+                    document.getElementById('prevHours').textContent = '00';
+                    document.getElementById('prevMin').textContent = '00';
+                    document.getElementById('prevSec').textContent = '00';
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('prevDays').textContent = String(days).padStart(2, '0');
+                document.getElementById('prevHours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('prevMin').textContent = String(mins).padStart(2, '0');
+                document.getElementById('prevSec').textContent = String(secs).padStart(2, '0');
+            }
+
+            update();
+            setInterval(update, 1000);
+        }
+
+        // Live-Vorschau bei Texteingabe
+        document.getElementById('countdownHeading').addEventListener('input', updatePreview);
+        document.getElementById('countdownText').addEventListener('input', updatePreview);
+
+        function logout() { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+        function showToast(msg, type) {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div'); t.className = `toast toast-${type}`; t.textContent = msg;
+            c.appendChild(t); setTimeout(() => t.remove(), 4000);
+        }
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>

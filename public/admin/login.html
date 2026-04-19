@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login – Hochzeits-Galerie</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            max-width: 420px;
+            width: 100%;
+            margin: 20px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-header .icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card login-card fade-in">
+        <div class="login-header">
+            <div class="icon">🔐</div>
+            <h2>Admin Login</h2>
+            <p class="text-muted mt-1" id="loginSubtitle">Melde dich an, um die Galerie zu verwalten.</p>
+        </div>
+
+        <!-- Setup Form (erstes Mal) -->
+        <form id="setupForm" style="display:none" onsubmit="return handleSetup(event)">
+            <div class="form-group">
+                <label for="setupEmail">E-Mail</label>
+                <input type="email" id="setupEmail" class="form-control" placeholder="admin@hochzeit.de" required>
+            </div>
+            <div class="form-group">
+                <label for="setupPassword">Passwort</label>
+                <input type="password" id="setupPassword" class="form-control" placeholder="Min. 6 Zeichen" required
+                    minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="setupPassword2">Passwort wiederholen</label>
+                <input type="password" id="setupPassword2" class="form-control" placeholder="Passwort bestätigen"
+                    required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">🔑 Admin-Konto erstellen</button>
+        </form>
+
+        <!-- Login Form -->
+        <form id="loginForm" style="display:none" onsubmit="return handleLogin(event)">
+            <div class="form-group">
+                <label for="loginEmail">E-Mail</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="admin@hochzeit.de" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Passwort</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="Passwort" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">🔓 Einloggen</button>
+        </form>
+
+        <div id="errorMsg" class="mt-2 text-center" style="color:#e74c3c; font-size:0.9rem; display:none"></div>
+    </div>
+
+    <script>
+        const API = '';
+
+        async function init() {
+            // Prüfe ob bereits eingeloggt
+            const token = localStorage.getItem('adminToken');
+            if (token) {
+                try {
+                    const res = await fetch(`${API}/api/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        window.location.href = '/admin/dashboard.html';
+                        return;
+                    }
+                } catch (e) { }
+                localStorage.removeItem('adminToken');
+            }
+
+            // Prüfe ob Admin existiert
+            const res = await fetch(`${API}/api/auth/check`);
+            const data = await res.json();
+
+            if (data.hasAdmin) {
+                document.getElementById('loginForm').style.display = 'block';
+            } else {
+                document.getElementById('setupForm').style.display = 'block';
+                document.getElementById('loginSubtitle').textContent = 'Erstelle dein Admin-Konto für die Galerie.';
+            }
+        }
+
+        async function handleSetup(e) {
+            e.preventDefault();
+            const email = document.getElementById('setupEmail').value;
+            const password = document.getElementById('setupPassword').value;
+            const password2 = document.getElementById('setupPassword2').value;
+
+            if (password !== password2) {
+                showError('Passwörter stimmen nicht überein');
+                return false;
+            }
+
+            try {
+                const res = await fetch(`${API}/api/auth/setup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error);
+
+                // Direkt einloggen
+                await doLogin(email, password);
+            } catch (err) {
+                showError(err.message);
+            }
+            return false;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            await doLogin(email, password);
+            return false;
+        }
+
+        async function doLogin(email, password) {
+            try {
+                const res = await fetch(`${API}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error);
+
+                localStorage.setItem('adminToken', data.token);
+                window.location.href = '/admin/dashboard.html';
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

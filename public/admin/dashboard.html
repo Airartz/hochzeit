@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard – Hochzeits-Galerie</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/admin/dashboard.html" class="navbar-brand"><span class="icon">⚙️</span> Admin Dashboard</a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/admin/dashboard.html" class="active">📊 Dashboard</a></li>
+                    <li><a href="/admin/guests.html">👥 Gäste</a></li>
+                    <li><a href="/admin/albums.html">📁 Alben</a></li>
+                    <li><a href="/admin/challenges.html">🎯 Challenges</a></li>
+                    <li><a href="/admin/settings.html">⚙️ Einstellungen</a></li>
+                    <li><a href="/admin/qrcode.html">📱 QR-Code</a></li>
+                    <li><a href="/admin/countdown.html">⏳ Countdown</a></li>
+                    <li><a href="/" target="_blank">🌐 Zur Galerie</a></li>
+                    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container">
+                <h1 class="mb-3 fade-in">📊 Dashboard</h1>
+
+                <!-- Update Banner -->
+                <div id="updateBanner" style="display:none; background:linear-gradient(135deg,#2ecc71,#27ae60); color:#fff; border-radius:12px; padding:16px 20px; margin-bottom:24px; display:none; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <span style="font-size:1.4rem">🆕</span>
+                    <div style="flex:1; min-width:200px">
+                        <strong id="updateTitle">Update verfügbar!</strong>
+                        <div style="font-size:0.85rem; opacity:0.9; margin-top:2px" id="updateSubtitle"></div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap">
+                        <button onclick="installUpdate()" id="installBtn" class="btn btn-sm" style="background:#fff; color:#27ae60; font-weight:600; border:none">⬇️ Jetzt installieren</button>
+                        <button onclick="document.getElementById('updateBanner').style.display='none'" class="btn btn-sm" style="background:rgba(255,255,255,0.2); color:#fff; border:none">✕</button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">📷</div>
+                        <div class="stat-value" id="statPhotos">0</div>
+                        <div class="stat-label">Fotos</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">🎬</div>
+                        <div class="stat-value" id="statVideos">0</div>
+                        <div class="stat-label">Videos</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="statGuests">0</div>
+                        <div class="stat-label">Gäste</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-value" id="statSize">0 MB</div>
+                        <div class="stat-label">Speicher</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card fade-in mb-3">
+                    <h3 class="mb-2">⚡ Schnellaktionen</h3>
+                    <div class="flex gap-2 flex-wrap">
+                        <a href="/admin/qrcode.html" class="btn btn-primary btn-sm">📱 QR-Code anzeigen</a>
+                        <button class="btn btn-secondary btn-sm" onclick="downloadAll()">📥 Alle Fotos
+                            downloaden</button>
+                        <a href="/diashow" target="_blank" class="btn btn-secondary btn-sm">📺 Live-Diashow</a>
+                        <a href="/admin/settings.html" class="btn btn-ghost btn-sm">⚙️ Einstellungen</a>
+                    </div>
+                </div>
+
+                <!-- Recent uploads -->
+                <div class="card fade-in">
+                    <div class="flex-between mb-2">
+                        <h3>📸 Neueste Uploads</h3>
+                        <a href="/galerie" target="_blank" class="btn btn-ghost btn-sm">Alle ansehen →</a>
+                    </div>
+                    <div class="gallery-grid" id="recentGrid"
+                        style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:8px"></div>
+                    <div class="empty-state" id="emptyRecent" style="display:none; padding:40px">
+                        <div class="empty-icon">📷</div>
+                        <h3>Noch keine Uploads</h3>
+                        <p>Teile den QR-Code mit euren Gästen!</p>
+                    </div>
+                </div>
+
+                <!-- Gefahrenzone -->
+                <div class="card fade-in mb-3" style="margin-top:32px; border:2px solid #e74c3c">
+                    <h3 class="mb-2" style="color:#e74c3c">⚠️ Gefahrenzone</h3>
+                    <p class="text-muted mb-2" style="font-size:0.9rem">
+                        Alle Fotos, Videos & Gästedaten unwiderruflich löschen. Die Backup-Dateien bleiben erhalten.
+                    </p>
+                    <button class="btn btn-sm" onclick="resetAll()" style="background:#e74c3c; color:#fff; border:none">
+                        🗑️ Galerie komplett zurücksetzen
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login.html';
+
+        async function init() {
+            await loadStats();
+            await loadRecent();
+            checkForUpdate();
+        }
+
+        async function checkForUpdate() {
+            try {
+                const res = await fetch(`${API}/api/update/check`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.updateAvailable) {
+                    const banner = document.getElementById('updateBanner');
+                    document.getElementById('updateTitle').textContent = `Update verfügbar: ${data.latestVersion}`;
+                    document.getElementById('updateSubtitle').textContent =
+                        `Aktuell: v${data.currentVersion}` +
+                        (data.publishedAt ? ` · Veröffentlicht: ${new Date(data.publishedAt).toLocaleDateString('de-DE')}` : '');
+                    banner.style.display = 'flex';
+                }
+            } catch (e) {}
+        }
+
+        async function installUpdate() {
+            if (!confirm('Update jetzt installieren?\n\nDer Server wird danach automatisch neu gestartet.')) return;
+            const btn = document.getElementById('installBtn');
+            btn.textContent = '⏳ Installiere...';
+            btn.disabled = true;
+            try {
+                const res = await fetch(`${API}/api/update/install`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Update gestartet! Seite lädt in 15 Sekunden neu...', 'success');
+                    setTimeout(() => location.reload(), 15000);
+                } else {
+                    showToast('Fehler: ' + (data.error || 'Unbekannt'), 'error');
+                    btn.textContent = '⬇️ Jetzt installieren';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                showToast('Verbindungsfehler beim Update', 'error');
+                btn.textContent = '⬇️ Jetzt installieren';
+                btn.disabled = false;
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API}/api/media/stats`);
+                const s = await res.json();
+                document.getElementById('statPhotos').textContent = s.photos || 0;
+                document.getElementById('statVideos').textContent = s.videos || 0;
+                document.getElementById('statGuests').textContent = s.guests || 0;
+                const mb = ((s.totalSize || 0) / 1024 / 1024).toFixed(1);
+                document.getElementById('statSize').textContent = mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb} MB`;
+            } catch (e) { }
+        }
+
+        async function loadRecent() {
+            try {
+                const res = await fetch(`${API}/api/media?limit=12`);
+                const data = await res.json();
+
+                if (data.media.length === 0) {
+                    document.getElementById('emptyRecent').style.display = 'block';
+                    return;
+                }
+
+                document.getElementById('recentGrid').innerHTML = data.media.map(m => {
+                    const src = m.thumbnail_filename
+                        ? `/uploads/thumbnails/${m.thumbnail_filename}`
+                        : `/uploads/media/${m.stored_filename}`;
+                    return `
+                        <div class="gallery-item" style="aspect-ratio:1;border-radius:8px;position:relative">
+                            ${m.file_type === 'video'
+                            ? `<video src="/uploads/media/${m.stored_filename}" preload="metadata" style="width:100%;height:100%;object-fit:cover"></video><span class="video-badge" style="font-size:0.7rem;padding:2px 6px">🎬</span>`
+                            : `<img src="${src}" style="width:100%;height:100%;object-fit:cover" loading="lazy">`}
+                            <div class="overlay">
+                                <span class="guest-name" style="font-size:0.75rem">${m.guest_name}</span>
+                                <div class="actions">
+                                    <button onclick="deleteMedia(${m.id})" title="Löschen" style="width:28px;height:28px;font-size:0.8rem">🗑</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) { }
+        }
+
+        async function deleteMedia(id) {
+            if (!confirm('Dieses Foto wirklich löschen?')) return;
+            try {
+                await fetch(`${API}/api/media/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                showToast('Foto gelöscht', 'success');
+                init();
+            } catch (e) {
+                showToast('Fehler beim Löschen', 'error');
+            }
+        }
+
+        function downloadAll() {
+            window.open(`${API}/api/media/download-all`, '_blank');
+            showToast('Download wird vorbereitet...', 'info');
+        }
+
+        async function resetAll() {
+            if (!confirm('⚠️ ACHTUNG!\n\nAlle Fotos, Videos, Likes und Gästedaten werden unwiderruflich gelöscht!\n\nBackup-Dateien bleiben erhalten.\n\nWirklich fortfahren?')) return;
+
+            const eingabe = prompt('Zum Bestätigen bitte "LÖSCHEN" eingeben:');
+            if (eingabe !== 'LÖSCHEN') {
+                showToast('Zurücksetzen abgebrochen', 'info');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API}/api/media/reset-all`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.deleted} Dateien gelöscht! Galerie zurückgesetzt.`, 'success');
+                    init();
+                } else {
+                    showToast('Fehler: ' + (data.error || 'Unbekannt'), 'error');
+                }
+            } catch (e) {
+                showToast('Reset fehlgeschlagen', 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/login.html';
+        }
+
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        }
+
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>

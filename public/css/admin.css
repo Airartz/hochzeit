@@ -1,0 +1,141 @@
+/* ===== Admin Navigation Redesign ===== */
+
+/* Kompaktere Navbar */
+.navbar {
+    padding: 0 16px;
+}
+
+.navbar-inner {
+    height: 60px;
+    gap: 20px;
+}
+
+/* Brand kleiner & kompakter */
+.navbar-brand {
+    font-size: 1.1rem;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.navbar-brand .icon {
+    font-size: 1.3rem;
+}
+
+/* Links: kompakte Pills in einer Zeile */
+.navbar-links {
+    gap: 2px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.navbar-links::-webkit-scrollbar {
+    display: none;
+}
+
+.navbar-links a {
+    font-size: 0.78rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.navbar-links a:hover {
+    color: var(--primary-dark);
+    background: rgba(201, 168, 76, 0.08);
+}
+
+.navbar-links a.active {
+    color: #fff;
+    background: var(--primary);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(201, 168, 76, 0.3);
+}
+
+/* Logout & Galerie-Link visuell absetzen */
+.navbar-links li:nth-last-child(1) a,
+.navbar-links li:nth-last-child(2) a {
+    opacity: 0.7;
+    font-size: 0.75rem;
+}
+
+.navbar-links li:nth-last-child(1) a:hover,
+.navbar-links li:nth-last-child(2) a:hover {
+    opacity: 1;
+}
+
+/* Trenner vor "Zur Galerie" */
+.navbar-links li:nth-last-child(2) {
+    margin-left: 6px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border-light);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+    .navbar-links a {
+        font-size: 0.72rem;
+        padding: 5px 8px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .navbar-links {
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--surface);
+        flex-direction: column;
+        padding: 20px;
+        gap: 4px;
+        z-index: 200;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .navbar-links.open {
+        display: flex;
+    }
+
+    .navbar-links a {
+        font-size: 0.95rem;
+        padding: 14px 16px;
+        border-radius: 12px;
+    }
+
+    .navbar-links a.active {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    /* Trenner-Reset */
+    .navbar-links li:nth-last-child(2) {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .navbar-links li:nth-last-child(1) a,
+    .navbar-links li:nth-last-child(2) a {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .navbar-mobile-toggle {
+        display: block;
+    }
+}

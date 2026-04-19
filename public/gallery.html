@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galerie – Hochzeits-Fotogalerie</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/template-loader.js"></script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
+    <style>
+        /* Like Button im Lightbox */
+        .lightbox-like {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .like-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .like-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .like-btn:active {
+            transform: scale(0.95);
+        }
+
+        .like-btn.liked {
+            background: rgba(231, 76, 60, 0.25);
+            border-color: #e74c3c;
+            color: #ff6b6b;
+        }
+
+        .like-btn .heart-icon {
+            font-size: 1.3rem;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .like-btn.liked .heart-icon {
+            transform: scale(1.2);
+        }
+
+        .like-btn .like-count {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Heart Burst Animation */
+        @keyframes heartBurst {
+            0% {
+                transform: scale(1);
+            }
+
+            30% {
+                transform: scale(1.5);
+            }
+
+            60% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                transform: scale(1.2);
+            }
+        }
+
+        .like-btn.burst .heart-icon {
+            animation: heartBurst 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Like Count auf Thumbnails im Grid */
+        .gallery-item .like-badge {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #ff6b6b;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Lightbox Info anpassen */
+        .lightbox-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Download Disabled Popup */
+        .dl-popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeInOverlay 0.3s ease;
+        }
+
+        @keyframes fadeInOverlay {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .dl-popup {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 40px 32px;
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.85) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .dl-popup .popup-emoji {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+        }
+
+        .dl-popup h2 {
+            font-family: var(--font-display);
+            margin-bottom: 12px;
+            font-size: 1.5rem;
+        }
+
+        .dl-popup .popup-message {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        /* Countdown */
+        .countdown-display {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .countdown-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .countdown-unit .number {
+            background: rgba(201, 168, 76, 0.12);
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            font-weight: 700;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown-unit .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dl-popup .close-btn {
+            background: rgba(0, 0, 0, 0.08);
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .dl-popup .close-btn:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/" class="navbar-brand"><span class="icon">💒</span><span id="navTitle">Unsere
+                        Hochzeit</span></a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/">Start</a></li>
+                    <li><a href="/hochladen">📸 Hochladen</a></li>
+                    <li><a href="/galerie" class="active">🖼️ Galerie</a></li>
+                    <li><a href="/spiel">🎯 Challenges</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="text-center mb-3 fade-in">
+                    <h1>🖼️ Galerie</h1>
+                    <p class="text-muted mt-1">Alle Fotos und Videos von unserer Feier</p>
+                </div>
+
+                <!-- Album Tabs -->
+                <div class="album-tabs" id="albumTabs">
+                    <button class="album-tab active" data-album="all" onclick="filterAlbum('all', this)">Alle</button>
+                </div>
+
+                <!-- Download All -->
+                <div class="flex-between mb-2 flex-wrap gap-1">
+                    <span id="mediaCount" class="text-muted" style="font-size:0.9rem"></span>
+                    <button class="btn btn-secondary btn-sm" id="downloadAllBtn" onclick="downloadAll()">📥 Alle
+                        herunterladen</button>
+                </div>
+
+                <!-- Gallery Grid -->
+                <div class="gallery-grid" id="galleryGrid"></div>
+
+                <!-- Load More -->
+                <div class="text-center mt-3" id="loadMoreContainer" style="display:none">
+                    <button class="btn btn-secondary" onclick="loadMore()">Mehr laden</button>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display:none">
+                    <div class="empty-icon">📷</div>
+                    <h3>Noch keine Fotos</h3>
+                    <p>Sei der/die Erste und lade deine Fotos hoch!</p>
+                    <a href="/hochladen" class="btn btn-primary">📸 Jetzt hochladen</a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> für unsere Hochzeit</p>
+        </footer>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+        <button class="lightbox-nav prev" onclick="navLightbox(-1)">‹</button>
+        <div class="lightbox-content" id="lightboxContent"></div>
+        <button class="lightbox-nav next" onclick="navLightbox(1)">›</button>
+        <div class="lightbox-info" id="lightboxInfo"></div>
+    </div>
+
+    <!-- Download Disabled Popup -->
+    <div class="dl-popup-overlay" id="dlPopup" style="display:none" onclick="closeDlPopup(event)">
+        <div class="dl-popup">
+            <div class="popup-emoji">📸</div>
+            <h2>Downloads nicht verfügbar</h2>
+            <p class="popup-message" id="dlPopupMessage"></p>
+            <div class="countdown-display" id="countdownDisplay" style="display:none">
+                <div class="countdown-unit">
+                    <div class="number" id="cdDays">0</div>
+                    <div class="label">Tage</div>
+                </div>
+                <div class="countdown-unit">
+                    <div class="number" id="cdHours">0</div>
+                    <div class="label">Std</div>
+                </div>
+                <div class="countdown-unit">
+                    <div class="number" id="cdMinutes">0</div>
+                    <div class="label">Min</div>
+                </div>
+                <div class="countdown-unit">
+                    <div class="number" id="cdSeconds">0</div>
+                    <div class="label">Sek</div>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeDlPopup()">Verstanden</button>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        let allMedia = [];
+        let currentAlbum = 'all';
+        let currentPage = 1;
+        let totalMedia = 0;
+        let lightboxIndex = 0;
+
+        // Like-Daten
+        let likesMap = {};   // { mediaId: count }
+        let userLikes = [];  // [mediaId, ...]
+        let allowDownload = true; // Gast-Download erlaubt?
+        let downloadDisabledMessage = '';
+        let countdownEnabled = false;
+        let countdownDate = null;
+        let countdownInterval = null;
+
+        // Einzigartige Gast-ID für Likes (pro Browser)
+        function getGuestUid() {
+            let uid = localStorage.getItem('guest_uid');
+            if (!uid) {
+                uid = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('guest_uid', uid);
+            }
+            return uid;
+        }
+
+        const guestUid = getGuestUid();
+
+        async function init() {
+            await loadSettings();
+            await loadAlbums();
+            await loadMedia();
+            await loadLikes();
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API}/api/gallery`);
+                const s = await res.json();
+                if (s.title) document.getElementById('navTitle').textContent = s.title;
+                if (s.primary_color) document.documentElement.style.setProperty('--primary', s.primary_color);
+                if (s.background_color) document.documentElement.style.setProperty('--background', s.background_color);
+                allowDownload = s.allow_guest_download == 1 || s.allow_guest_download === true;
+                downloadDisabledMessage = s.download_disabled_message || 'Die Fotos stehen bald zum Download bereit!';
+                countdownEnabled = s.countdown_enabled == 1 || s.countdown_enabled === true;
+                countdownDate = s.countdown_date || null;
+                // Download-Button ein/ausblenden
+                document.getElementById('downloadAllBtn').style.display = allowDownload ? '' : 'none';
+            } catch (e) { }
+        }
+
+        async function loadAlbums() {
+            try {
+                const res = await fetch(`${API}/api/albums`);
+                const albums = await res.json();
+                const tabs = document.getElementById('albumTabs');
+                tabs.innerHTML = `<button class="album-tab active" data-album="all" onclick="filterAlbum('all', this)">Alle</button>` +
+                    albums.map(a => `<button class="album-tab" data-album="${a.id}" onclick="filterAlbum(${a.id}, this)">${a.name} <span class="count">${a.media_count || 0}</span></button>`).join('');
+            } catch (e) { }
+        }
+
+        async function loadMedia(append = false) {
+            try {
+                const params = new URLSearchParams({ page: currentPage, limit: 50 });
+                if (currentAlbum !== 'all') params.append('album_id', currentAlbum);
+
+                const res = await fetch(`${API}/api/media?${params}`);
+                const data = await res.json();
+                totalMedia = data.total;
+
+                if (append) {
+                    allMedia = [...allMedia, ...data.media];
+                } else {
+                    allMedia = data.media;
+                }
+
+                renderGallery();
+                document.getElementById('mediaCount').textContent = `${totalMedia} Erinnerungen`;
+                document.getElementById('emptyState').style.display = allMedia.length === 0 ? 'block' : 'none';
+                document.getElementById('loadMoreContainer').style.display = allMedia.length < totalMedia ? 'block' : 'none';
+            } catch (e) {
+                console.error('Media laden fehlgeschlagen:', e);
+            }
+        }
+
+        async function loadLikes() {
+            try {
+                const res = await fetch(`${API}/api/likes?guest_uid=${encodeURIComponent(guestUid)}`);
+                const data = await res.json();
+                likesMap = data.likesMap || {};
+                userLikes = data.userLikes || [];
+                renderGallery(); // Grid mit Like-Counts aktualisieren
+            } catch (e) {
+                console.error('Likes laden fehlgeschlagen:', e);
+            }
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = allMedia.map((m, i) => {
+                const isVideo = m.file_type === 'video';
+                const src = m.thumbnail_filename
+                    ? `/uploads/thumbnails/${m.thumbnail_filename}`
+                    : `/uploads/media/${m.stored_filename}`;
+                const likeCount = likesMap[m.id] || 0;
+
+                return `
+                    <div class="gallery-item fade-in" onclick="openLightbox(${i})" style="position:relative">
+                        ${isVideo
+                        ? `<video src="/uploads/media/${m.stored_filename}" preload="metadata"></video><span class="video-badge">🎬 Video</span>`
+                        : `<img src="${src}" alt="Foto von ${m.guest_name}" loading="lazy">`}
+                        <div class="overlay">
+                            <span class="guest-name">📸 ${m.guest_name}</span>
+                            ${allowDownload ? `<div class="actions">
+                                <button onclick="event.stopPropagation(); downloadMedia(${m.id})" title="Download">⬇️</button>
+                            </div>` : ''}
+                        </div>
+                        ${likeCount > 0 ? `<div class="like-badge">❤️ ${likeCount}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterAlbum(albumId, btn) {
+            currentAlbum = albumId;
+            currentPage = 1;
+            document.querySelectorAll('.album-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            loadMedia();
+        }
+
+        function loadMore() {
+            currentPage++;
+            loadMedia(true);
+        }
+
+        function openLightbox(index) {
+            lightboxIndex = index;
+            const media = allMedia[index];
+            const content = document.getElementById('lightboxContent');
+            const info = document.getElementById('lightboxInfo');
+
+            if (media.file_type === 'video') {
+                content.innerHTML = `<video src="/uploads/media/${media.stored_filename}" controls autoplay style="max-width:90vw;max-height:85vh"></video>`;
+            } else {
+                content.innerHTML = `<img src="/uploads/media/${media.stored_filename}" alt="Foto von ${media.guest_name}">`;
+            }
+
+            const date = new Date(media.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const likeCount = likesMap[media.id] || 0;
+            const isLiked = userLikes.includes(media.id);
+
+            const myName = (localStorage.getItem('guestName') || '').trim().toLowerCase();
+            const isOwnPhoto = myName && media.guest_name.trim().toLowerCase() === myName;
+
+            let likeHtml = '';
+            if (isOwnPhoto) {
+                likeHtml = `<span style="color:rgba(255,255,255,0.5); font-size:0.85rem">📸 Dein Foto${likeCount > 0 ? ' · ❤️ ' + likeCount + ' Likes' : ''}</span>`;
+            } else {
+                likeHtml = `
+                    <button class="like-btn ${isLiked ? 'liked' : ''}" id="likeBtn" onclick="toggleLike(${media.id})">
+                        <span class="heart-icon">${isLiked ? '❤️' : '🤍'}</span>
+                        <span class="like-count" id="likeCount">${likeCount > 0 ? likeCount : ''}</span>
+                        <span>${isLiked ? 'Gefällt mir' : 'Gefällt mir'}</span>
+                    </button>
+                `;
+            }
+
+            info.innerHTML = `
+                <span class="guest">📸 ${media.guest_name}</span>
+                <span class="date">${date}</span>
+                <div class="lightbox-like">
+                    ${likeHtml}
+                </div>
+            `;
+
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        async function toggleLike(mediaId) {
+            const btn = document.getElementById('likeBtn');
+            btn.classList.add('burst');
+            setTimeout(() => btn.classList.remove('burst'), 500);
+
+            try {
+                const res = await fetch(`${API}/api/likes/${mediaId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ guest_uid: guestUid })
+                });
+
+                const data = await res.json();
+
+                // Lokale Like-Daten aktualisieren
+                likesMap[mediaId] = data.likes;
+                if (data.liked) {
+                    if (!userLikes.includes(mediaId)) userLikes.push(mediaId);
+                } else {
+                    userLikes = userLikes.filter(id => id !== mediaId);
+                }
+
+                // Button aktualisieren
+                btn.className = `like-btn ${data.liked ? 'liked' : ''}`;
+                btn.innerHTML = `
+                    <span class="heart-icon">${data.liked ? '❤️' : '🤍'}</span>
+                    <span class="like-count">${data.likes > 0 ? data.likes : ''}</span>
+                    <span>${data.liked ? 'Gefällt mir' : 'Gefällt mir'}</span>
+                `;
+
+                // Grid aktualisieren
+                renderGallery();
+
+            } catch (err) {
+                console.error('Like fehlgeschlagen:', err);
+                showToast('Like fehlgeschlagen', 'error');
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+            const video = document.querySelector('.lightbox-content video');
+            if (video) video.pause();
+        }
+
+        function navLightbox(dir) {
+            lightboxIndex = (lightboxIndex + dir + allMedia.length) % allMedia.length;
+            openLightbox(lightboxIndex);
+        }
+
+        function downloadMedia(id) {
+            if (!allowDownload) {
+                showDlPopup();
+                return;
+            }
+            window.open(`${API}/api/media/download/${id}`, '_blank');
+        }
+
+        function downloadAll() {
+            if (!allowDownload) {
+                showDlPopup();
+                return;
+            }
+            const params = currentAlbum !== 'all' ? `?album_id=${currentAlbum}` : '';
+            window.open(`${API}/api/media/download-all${params}`, '_blank');
+            showToast('Download wird vorbereitet...', 'info');
+        }
+
+        function showDlPopup() {
+            document.getElementById('dlPopupMessage').textContent = downloadDisabledMessage;
+            document.getElementById('dlPopup').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Countdown starten wenn aktiviert
+            if (countdownEnabled && countdownDate) {
+                document.getElementById('countdownDisplay').style.display = 'flex';
+                updateCountdown();
+                if (countdownInterval) clearInterval(countdownInterval);
+                countdownInterval = setInterval(updateCountdown, 1000);
+            } else {
+                document.getElementById('countdownDisplay').style.display = 'none';
+            }
+        }
+
+        function closeDlPopup(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('dlPopup').style.display = 'none';
+            document.body.style.overflow = '';
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+        }
+
+        function updateCountdown() {
+            const target = new Date(countdownDate).getTime();
+            const now = Date.now();
+            const diff = target - now;
+
+            if (diff <= 0) {
+                document.getElementById('cdDays').textContent = '0';
+                document.getElementById('cdHours').textContent = '0';
+                document.getElementById('cdMinutes').textContent = '0';
+                document.getElementById('cdSeconds').textContent = '0';
+                if (countdownInterval) clearInterval(countdownInterval);
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('cdDays').textContent = days;
+            document.getElementById('cdHours').textContent = hours;
+            document.getElementById('cdMinutes').textContent = minutes;
+            document.getElementById('cdSeconds').textContent = seconds;
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', e => {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') navLightbox(-1);
+            if (e.key === 'ArrowRight') navLightbox(1);
+        });
+
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        }
+
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>

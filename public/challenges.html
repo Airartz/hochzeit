@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foto-Challenges – Hochzeits-Galerie</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/template-loader.js"></script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/" class="navbar-brand"><span class="icon">💒</span><span id="navTitle">Unsere
+                        Hochzeit</span></a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/">Start</a></li>
+                    <li><a href="/hochladen">📸 Hochladen</a></li>
+                    <li><a href="/galerie">🖼️ Galerie</a></li>
+                    <li><a href="/spiel" class="active">🎯 Challenges</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="text-center mb-3 fade-in">
+                    <h1>🎯 Foto-Challenges</h1>
+                    <p class="text-muted mt-1">Macht mit bei unseren lustigen Foto-Aufgaben! Knipst kreative Bilder und
+                        ladet sie hoch.</p>
+                </div>
+
+                <div class="challenges-grid" id="challengesGrid"></div>
+
+                <div class="empty-state" id="emptyState" style="display:none">
+                    <div class="empty-icon">🎯</div>
+                    <h3>Noch keine Challenges</h3>
+                    <p>Bald gibt es hier spannende Foto-Aufgaben!</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Made with <span class="heart">♥</span> für unsere Hochzeit</p>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+
+        async function init() {
+            await loadSettings();
+            await loadChallenges();
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API}/api/gallery`);
+                const s = await res.json();
+                if (s.title) document.getElementById('navTitle').textContent = s.title;
+                if (s.primary_color) document.documentElement.style.setProperty('--primary', s.primary_color);
+                if (s.background_color) document.documentElement.style.setProperty('--background', s.background_color);
+            } catch (e) { }
+        }
+
+        async function loadChallenges() {
+            try {
+                const res = await fetch(`${API}/api/challenges`);
+                const challenges = await res.json();
+
+                if (challenges.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                const grid = document.getElementById('challengesGrid');
+                grid.innerHTML = challenges.map(c => `
+                    <div class="challenge-card fade-in">
+                        <div class="emoji">${c.emoji}</div>
+                        <h3>${c.title}</h3>
+                        <p>${c.description}</p>
+                        <div class="submission-count">${c.submission_count || 0} Einreichungen</div>
+                        <a href="/hochladen?challenge=${c.id}" class="btn btn-primary btn-sm">📸 Foto einreichen</a>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Challenges laden fehlgeschlagen:', e);
+            }
+        }
+
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>

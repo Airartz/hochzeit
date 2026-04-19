@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gäste – Admin – Hochzeits-Galerie</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .guest-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .guest-table th {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border);
+            color: var(--primary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .guest-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .guest-table tr:hover td {
+            background: rgba(201, 168, 76, 0.05);
+        }
+
+        .guest-table .num {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .guest-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .guest-time {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-photo {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+
+        .badge-video {
+            background: rgba(155, 89, 182, 0.15);
+            color: #9b59b6;
+        }
+
+        .badge-like {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+        }
+
+        .badge-challenge {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+
+        .summary-bar {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .summary-item .num {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .sort-btn {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sort-btn:hover {
+            color: var(--primary);
+        }
+
+        .search-box {
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            max-width: 300px;
+        }
+
+        @media (max-width: 768px) {
+            .guest-table {
+                font-size: 0.8rem;
+            }
+
+            .guest-table th,
+            .guest-table td {
+                padding: 8px 10px;
+            }
+
+            .hide-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a href="/admin/dashboard.html" class="navbar-brand"><span class="icon">⚙️</span> Admin Dashboard</a>
+                <button class="navbar-mobile-toggle" onclick="toggleNav()">☰</button>
+                <ul class="navbar-links" id="navLinks">
+                    <li><a href="/admin/dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="/admin/guests.html" class="active">👥 Gäste</a></li>
+                    <li><a href="/admin/albums.html">📁 Alben</a></li>
+                    <li><a href="/admin/challenges.html">🎯 Challenges</a></li>
+                    <li><a href="/admin/settings.html">⚙️ Einstellungen</a></li>
+                    <li><a href="/admin/qrcode.html">📱 QR-Code</a></li>
+                    <li><a href="/admin/countdown.html">⏳ Countdown</a></li>
+                    <li><a href="/" target="_blank">🌐 Zur Galerie</a></li>
+                    <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="container">
+                <h1 class="mb-3 fade-in">👥 Gäste-Übersicht</h1>
+
+                <!-- Zusammenfassung -->
+                <div class="summary-bar fade-in">
+                    <div class="summary-item">
+                        <span class="num" id="totalGuests">0</span>
+                        <span>Gäste</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="num" id="totalUploads">0</span>
+                        <span>Uploads</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="num" id="totalLikes">0</span>
+                        <span>Likes</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="num" id="totalChallenges">0</span>
+                        <span>Challenges</span>
+                    </div>
+                </div>
+
+                <!-- Suche -->
+                <div class="search-box fade-in">
+                    <input type="text" id="searchInput" class="form-control" placeholder="🔍 Gast suchen..."
+                        oninput="filterGuests()">
+                </div>
+
+                <!-- Tabelle -->
+                <div class="card fade-in" style="overflow-x:auto">
+                    <table class="guest-table" id="guestTable">
+                        <thead>
+                            <tr>
+                                <th class="sort-btn" onclick="sortBy('guest_name')">👤 Name ⇅</th>
+                                <th class="sort-btn num" onclick="sortBy('uploads')">📷 Uploads ⇅</th>
+                                <th class="sort-btn num hide-mobile" onclick="sortBy('photos')">🖼 Fotos ⇅</th>
+                                <th class="sort-btn num hide-mobile" onclick="sortBy('videos')">🎬 Videos ⇅</th>
+                                <th class="sort-btn num" onclick="sortBy('likes_received')">❤️ Erhalten ⇅</th>
+                                <th class="sort-btn num hide-mobile" onclick="sortBy('likes_given')">👍 Gegeben ⇅</th>
+                                <th class="sort-btn num" onclick="sortBy('challenges')">🎯 Challenges ⇅</th>
+                                <th class="hide-mobile">📅 Letzter Upload</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guestBody"></tbody>
+                    </table>
+
+                    <div class="empty-state" id="emptyState" style="display:none; padding:40px">
+                        <div class="empty-icon">👥</div>
+                        <h3>Noch keine Gäste</h3>
+                        <p>Sobald Gäste Fotos hochladen, erscheinen sie hier.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API = '';
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login.html';
+
+        let guests = [];
+        let currentSort = 'uploads';
+        let sortAsc = false;
+
+        async function init() {
+            try {
+                const res = await fetch(`${API}/api/guests`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Laden fehlgeschlagen');
+                const data = await res.json();
+                guests = data.guests;
+
+                // Zusammenfassung
+                document.getElementById('totalGuests').textContent = guests.length;
+                document.getElementById('totalUploads').textContent =
+                    guests.reduce((s, g) => s + g.uploads, 0);
+                document.getElementById('totalLikes').textContent =
+                    guests.reduce((s, g) => s + g.likes_received, 0);
+                document.getElementById('totalChallenges').textContent =
+                    guests.reduce((s, g) => s + g.challenges, 0);
+
+                renderGuests();
+            } catch (e) {
+                showToast('Fehler beim Laden der Gästedaten', 'error');
+            }
+        }
+
+        function renderGuests(filtered) {
+            const list = filtered || guests;
+
+            if (list.length === 0) {
+                document.getElementById('guestTable').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('guestTable').style.display = 'table';
+            document.getElementById('emptyState').style.display = 'none';
+
+            document.getElementById('guestBody').innerHTML = list.map(g => `
+                <tr>
+                    <td>
+                        <div class="guest-name">${escHtml(g.guest_name)}</div>
+                        <div class="guest-time">Dabei seit ${formatDate(g.first_upload)}</div>
+                    </td>
+                    <td class="num">${g.uploads}</td>
+                    <td class="num hide-mobile">
+                        ${g.photos > 0 ? `<span class="badge badge-photo">${g.photos}</span>` : '0'}
+                    </td>
+                    <td class="num hide-mobile">
+                        ${g.videos > 0 ? `<span class="badge badge-video">${g.videos}</span>` : '0'}
+                    </td>
+                    <td class="num">
+                        ${g.likes_received > 0 ? `<span class="badge badge-like">❤️ ${g.likes_received}</span>` : '0'}
+                    </td>
+                    <td class="num hide-mobile">${g.likes_given}</td>
+                    <td class="num">
+                        ${g.challenges > 0 ? `<span class="badge badge-challenge">🎯 ${g.challenges}</span>` : '0'}
+                    </td>
+                    <td class="hide-mobile guest-time">${formatDate(g.last_upload)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function sortBy(field) {
+            if (currentSort === field) {
+                sortAsc = !sortAsc;
+            } else {
+                currentSort = field;
+                sortAsc = field === 'guest_name';
+            }
+
+            guests.sort((a, b) => {
+                let va = a[field], vb = b[field];
+                if (typeof va === 'string') va = va.toLowerCase();
+                if (typeof vb === 'string') vb = vb.toLowerCase();
+                if (va < vb) return sortAsc ? -1 : 1;
+                if (va > vb) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            renderGuests();
+        }
+
+        function filterGuests() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            if (!q) return renderGuests();
+            renderGuests(guests.filter(g => g.guest_name.toLowerCase().includes(q)));
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '–';
+            return new Date(dateStr).toLocaleDateString('de-DE', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function logout() { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 4000);
+        }
+        function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+
+</html>
